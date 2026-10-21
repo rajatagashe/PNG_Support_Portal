@@ -1,0 +1,148 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "field:rule_name",
+ "creation": "2026-10-18 20:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "rule_name",
+  "customer",
+  "domain",
+  "is_active",
+  "column_break_vip",
+  "escalate_priority",
+  "escalate_team",
+  "escalate_sla",
+  "vip_tag",
+  "require_senior_agent",
+  "section_break_desc",
+  "description"
+ ],
+ "fields": [
+  {
+   "fieldname": "rule_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Rule Name",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "customer",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Customer",
+   "options": "HD Customer"
+  },
+  {
+   "fieldname": "domain",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Domain"
+  },
+  {
+   "default": "1",
+   "fieldname": "is_active",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Is Active"
+  },
+  {
+   "fieldname": "column_break_vip",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Urgent",
+   "fieldname": "escalate_priority",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Escalate Priority",
+   "options": "Urgent\nHigh\nMedium"
+  },
+  {
+   "fieldname": "escalate_team",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Escalate Team",
+   "options": "HD Team"
+  },
+  {
+   "fieldname": "escalate_sla",
+   "fieldtype": "Link",
+   "label": "Escalate SLA Policy",
+   "options": "HD Service Level Agreement"
+  },
+  {
+   "default": "vip-cgd",
+   "fieldname": "vip_tag",
+   "fieldtype": "Data",
+   "label": "VIP Tag"
+  },
+  {
+   "default": "0",
+   "fieldname": "require_senior_agent",
+   "fieldtype": "Check",
+   "label": "Require Senior Agent"
+  },
+  {
+   "fieldname": "section_break_desc",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "description",
+   "fieldtype": "Small Text",
+   "label": "Description"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-10-18 20:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Helpdesk",
+ "name": "HD VIP Routing Rule",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Agent Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Agent"
+  }
+ ],
+ "row_format": "Dynamic",
+ "search_fields": "rule_name,customer,domain",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

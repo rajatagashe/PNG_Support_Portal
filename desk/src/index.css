@@ -1,0 +1,561 @@
+@import "frappe-ui/style.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  .prose-f {
+    @apply break-normal max-w-none prose prose-code:break-all prose-code:whitespace-pre-wrap prose-img:border prose-img:rounded-6 prose-sm;
+  }
+  .prose-f * {
+    unicode-bidi: plaintext;
+  }
+  .prose-f:not(.not-prose):not(.not-prose *) pre {
+    background-color: var(--surface-gray-2);
+    color: var(--ink-gray-9);
+  }
+  /* Editor content carries both prose systems: prose-f underlines links via
+     text-decoration, prose-v3 via border-bottom. Keep only the prose-v3 line. */
+  .prose-f.prose-v3 a {
+    text-decoration: none;
+  }
+}
+
+/* The caption field, hidden by its stable data attribute - the placeholder
+   text it used to be keyed on has changed twice. */
+.tiptap [data-media-text-field] {
+  display: none !important;
+}
+
+html,
+body {
+  color: var(--ink-gray-9);
+  background-color: var(--surface-base);
+}
+
+:root {
+  color-scheme: light;
+
+  /* Primary Color System (#ea580c) */
+  --primary: #ea580c;
+  --primary-hover: #c2410c;
+  --primary-active: #9a3412;
+  --primary-light: #fff7ed;
+  --primary-subtle: #ffedd5;
+  --primary-border: #fdba74;
+  --primary-foreground: #ffffff;
+
+  /* Secondary Color System (#fed7aa) */
+  --secondary: #fed7aa;
+  --secondary-hover: #fdba74;
+  --secondary-active: #fb923c;
+  --secondary-light: #fffaf5;
+  --secondary-border: #fdba74;
+  --secondary-foreground: #7c2d12;
+
+  /* Frappe UI Focus Ring Overrides */
+  --focus-outline-default: 2px solid var(--primary);
+  --focus-outline-blue: 2px solid var(--primary);
+
+  /* Semantic Link and Accent Overrides */
+  --ink-blue-link: var(--primary);
+  --ink-blue-5: var(--primary);
+  --ink-blue-6: var(--primary-hover);
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  /* Dark mode Primary System */
+  --primary: #ea580c;
+  --primary-hover: #f97316;
+  --primary-active: #c2410c;
+  --primary-light: rgba(234, 88, 12, 0.2);
+  --primary-subtle: rgba(234, 88, 12, 0.12);
+  --primary-border: #ea580c;
+  --primary-foreground: #ffffff;
+
+  /* Dark mode Secondary System */
+  --secondary: #fed7aa;
+  --secondary-hover: #ffedd5;
+  --secondary-active: #fed7aa;
+  --secondary-light: rgba(254, 215, 170, 0.15);
+  --secondary-border: rgba(254, 215, 170, 0.4);
+  --secondary-foreground: #431407;
+
+  /* Dark mode Focus Ring */
+  --focus-outline-default: 2px solid var(--primary);
+  --focus-outline-blue: 2px solid var(--primary);
+
+  --ink-blue-link: #fb923c;
+  --ink-blue-5: #fb923c;
+  --ink-blue-6: #fdba74;
+}
+
+/* User selection highlighting */
+::selection {
+  background-color: var(--secondary);
+  color: var(--secondary-foreground);
+}
+
+/* -------------------------------------------------------------
+   PRIMARY COLOR APPLICATION: Buttons, Links, Interactive
+   ------------------------------------------------------------- */
+
+/* Solid / Primary Action Buttons */
+button.bg-surface-gray-10,
+a.bg-surface-gray-10,
+button.bg-surface-blue-6,
+a.bg-surface-blue-6,
+button.btn-primary,
+.btn-primary,
+button[data-variant="solid"]:not(.bg-surface-red-7):not(.bg-surface-green-7):not([disabled]),
+a[data-variant="solid"]:not(.bg-surface-red-7):not(.bg-surface-green-7):not([disabled]) {
+  background-color: var(--primary) !important;
+  color: var(--primary-foreground) !important;
+  border-color: transparent !important;
+}
+
+button.bg-surface-gray-10:hover:not([disabled]),
+a.bg-surface-gray-10:hover,
+button.bg-surface-blue-6:hover:not([disabled]),
+a.bg-surface-blue-6:hover,
+button.btn-primary:hover,
+.btn-primary:hover,
+button[data-variant="solid"]:not(.bg-surface-red-7):not(.bg-surface-green-7):not([disabled]):hover {
+  background-color: var(--primary-hover) !important;
+  color: var(--primary-foreground) !important;
+}
+
+button.bg-surface-gray-10:active:not([disabled]),
+a.bg-surface-gray-10:active,
+button.bg-surface-blue-6:active:not([disabled]),
+a.bg-surface-blue-6:active,
+button.btn-primary:active,
+.btn-primary:active,
+button[data-variant="solid"]:not(.bg-surface-red-7):not(.bg-surface-green-7):not([disabled]):active {
+  background-color: var(--primary-active) !important;
+  color: var(--primary-foreground) !important;
+}
+
+/* Secondary Buttons */
+button.btn-secondary,
+.btn-secondary,
+button[data-variant="secondary"] {
+  background-color: var(--secondary) !important;
+  color: var(--secondary-foreground) !important;
+  border: 1px solid var(--secondary-border) !important;
+}
+
+button.btn-secondary:hover,
+.btn-secondary:hover,
+button[data-variant="secondary"]:hover {
+  background-color: var(--secondary-hover) !important;
+  color: var(--secondary-foreground) !important;
+}
+
+button.btn-secondary:active,
+.btn-secondary:active,
+button[data-variant="secondary"]:active {
+  background-color: var(--secondary-active) !important;
+  color: var(--secondary-foreground) !important;
+}
+
+/* Text links */
+a.text-primary,
+a.text-blue-5,
+a.text-blue-6,
+.text-ink-blue-link,
+.text-ink-blue-5,
+.text-ink-blue-6 {
+  color: var(--primary) !important;
+}
+
+a.text-primary:hover,
+a.text-blue-5:hover,
+a.text-blue-6:hover,
+.text-ink-blue-link:hover,
+.text-ink-blue-5:hover,
+.text-ink-blue-6:hover {
+  color: var(--primary-hover) !important;
+}
+
+.prose a,
+.prose-f a {
+  color: var(--primary);
+  text-decoration-color: var(--secondary);
+}
+
+.prose a:hover,
+.prose-f a:hover {
+  color: var(--primary-hover);
+  text-decoration-color: var(--primary);
+}
+
+/* Checkboxes & Radios */
+input[type="checkbox"]:checked:not(:disabled),
+input[type="checkbox"]:indeterminate:not(:disabled),
+input[type="radio"]:checked:not(:disabled) {
+  color: var(--primary) !important;
+  border-color: var(--primary) !important;
+}
+
+input[type="checkbox"]:checked:not(:disabled):hover,
+input[type="radio"]:checked:not(:disabled):hover {
+  color: var(--primary-hover) !important;
+  border-color: var(--primary-hover) !important;
+}
+
+/* Switches & Toggles */
+button[role="switch"][data-state="checked"]:not(:disabled),
+[data-slot="control"][data-state="checked"]:not(:disabled) {
+  background-color: var(--primary) !important;
+  border-color: var(--primary) !important;
+}
+
+button[role="switch"][data-state="checked"]:hover:not(:disabled),
+[data-slot="control"][data-state="checked"]:hover:not(:disabled) {
+  background-color: var(--primary-hover) !important;
+}
+
+/* Tabs */
+[role="tab"][data-state="active"],
+button[role="tab"][aria-selected="true"],
+.tab-item.active {
+  color: var(--primary) !important;
+  border-color: var(--primary) !important;
+}
+
+/* Focus rings & focused form controls */
+.focus-ring:focus-visible,
+.focus-visible\:focus-ring:focus-visible {
+  outline: 2px solid var(--primary) !important;
+  outline-offset: 1px !important;
+}
+
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  border-color: var(--primary) !important;
+}
+
+/* -------------------------------------------------------------
+   SECONDARY COLOR APPLICATION: Backgrounds, Highlights, Supporting
+   ------------------------------------------------------------- */
+
+/* Active Sidebar Navigation Item */
+[data-slot="sidebar-item"][data-state="active"],
+[data-slot="sidebar-item"].active,
+nav a.router-link-exact-active:not(.btn):not([class*="bg-"]) {
+  background-color: var(--secondary) !important;
+  color: var(--secondary-foreground) !important;
+  font-weight: 500;
+}
+
+[data-slot="sidebar-item"][data-state="active"] svg,
+[data-slot="sidebar-item"][data-state="active"] .lucide,
+[data-slot="sidebar-item"][data-state="active"] [data-slot="prefix"] {
+  color: var(--primary) !important;
+}
+
+[data-theme="dark"] [data-slot="sidebar-item"][data-state="active"],
+[data-theme="dark"] [data-slot="sidebar-item"].active,
+[data-theme="dark"] nav a.router-link-exact-active:not(.btn):not([class*="bg-"]) {
+  background-color: var(--secondary-light) !important;
+  color: var(--secondary) !important;
+}
+
+[data-theme="dark"] [data-slot="sidebar-item"][data-state="active"] svg,
+[data-theme="dark"] [data-slot="sidebar-item"][data-state="active"] .lucide,
+[data-theme="dark"] [data-slot="sidebar-item"][data-state="active"] [data-slot="prefix"] {
+  color: var(--secondary) !important;
+}
+
+/* Dropdown Menu Item Highlight */
+[data-slot="item"][data-highlighted],
+[data-slot="menu-item"][data-highlighted],
+[data-slot="item-list-row"][data-state="active"] {
+  background-color: var(--secondary-light) !important;
+  color: var(--secondary-foreground) !important;
+}
+
+/* Secondary Badges, Chips & Highlights */
+.badge-secondary,
+[data-slot="badge"][data-variant="secondary"],
+mark,
+.highlight-secondary {
+  background-color: var(--secondary) !important;
+  color: var(--secondary-foreground) !important;
+  border-color: var(--secondary-border) !important;
+}
+
+.badge-primary,
+[data-slot="badge"][data-variant="primary"] {
+  background-color: var(--primary) !important;
+  color: var(--primary-foreground) !important;
+}
+
+.badge-subtle-primary,
+[data-slot="badge"][data-variant="subtle-primary"] {
+  background-color: var(--primary-light) !important;
+  color: var(--primary) !important;
+  border: 1px solid var(--secondary) !important;
+}
+
+/* Selected Rows */
+tr[data-selected="true"],
+.list-row-selected,
+[data-slot="list-row"][data-selected="true"] {
+  background-color: var(--secondary-light) !important;
+}
+
+/* Dark mode shadows */
+[data-theme="dark"] .shadow-sm,
+[data-theme="dark"] .hover\:shadow-sm:hover,
+[data-theme="dark"] .focus\:shadow-sm:focus {
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.12),
+    0 1px 2px 0 rgba(0, 0, 0, 0.55);
+}
+[data-theme="dark"] .shadow,
+[data-theme="dark"] .hover\:shadow:hover,
+[data-theme="dark"] .focus\:shadow:focus {
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.12),
+    0 2px 4px 0 rgba(0, 0, 0, 0.6);
+}
+[data-theme="dark"] .shadow-md,
+[data-theme="dark"] .hover\:shadow-md:hover,
+[data-theme="dark"] .focus\:shadow-md:focus {
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.13),
+    0 4px 10px -2px rgba(0, 0, 0, 0.65);
+}
+[data-theme="dark"] .shadow-lg,
+[data-theme="dark"] .hover\:shadow-lg:hover,
+[data-theme="dark"] .focus\:shadow-lg:focus {
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.14),
+    0 10px 24px -6px rgba(0, 0, 0, 0.7);
+}
+[data-theme="dark"] .shadow-xl,
+[data-theme="dark"] .hover\:shadow-xl:hover,
+[data-theme="dark"] .focus\:shadow-xl:focus {
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.14),
+    0 16px 32px -8px rgba(0, 0, 0, 0.75);
+}
+[data-theme="dark"] .shadow-2xl,
+[data-theme="dark"] .hover\:shadow-2xl:hover,
+[data-theme="dark"] .focus\:shadow-2xl:focus {
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.15),
+    0 24px 48px -12px rgba(0, 0, 0, 0.8);
+}
+[data-theme="dark"] .shadow-inner {
+  box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.55);
+}
+
+[data-theme="dark"] hr {
+  border-color: var(--outline-gray-2);
+}
+
+/* Modern slim scrollbars */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--outline-gray-3) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: var(--outline-gray-3);
+  border-radius: 9999px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background-color: var(--outline-gray-4);
+}
+
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+
+/* replied content css */
+.replied-content .collapse {
+    margin: 10px 0 10px 0;
+    visibility: visible;
+    cursor: pointer;
+    display: flex;
+    font-weight: 700;
+    height: 12px;
+    line-height: 0.3;
+    background: #e8eaed;
+    width: 23px;
+    justify-content: center;
+    border-radius: 5px;
+}
+.replied-content .collapse:hover {
+  background: #dadce0;
+}
+[data-theme="dark"] .replied-content .collapse {
+  color: #e2e2e2;
+  background: #424242;
+}
+[data-theme="dark"] .replied-content .collapse:hover {
+  background: #525252;
+}
+.replied-content .collapse + input {
+  display: none;
+}
+.replied-content .collapse + input + div {
+  display: none;
+}
+.replied-content .collapse + input:checked + div {
+  display: block;
+}
+
+
+/* transition fade css */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+/* Scroll-driven edge fade for scrollable dropdown groups.*/
+@property --fade-bottom {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 20px;
+}
+
+@keyframes scroll-fade {
+  0% {
+    --fade-bottom: 20px;
+  }
+  100% {
+    --fade-bottom: 0px;
+  }
+}
+
+/* -------------------------------------------------------------
+   MODERN UI / UX ELEVATION TOKENS & UTILITIES
+   ------------------------------------------------------------- */
+
+/* Modern Card with crisp elevation */
+.modern-card {
+  background-color: var(--surface-white);
+  border: 1px solid var(--outline-gray-2);
+  border-radius: 0.75rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.modern-card:hover {
+  border-color: var(--outline-gray-3);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.07);
+}
+
+/* Semantic Status Pill Badges */
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.2rem 0.625rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1rem;
+  letter-spacing: 0.025em;
+  white-space: nowrap;
+}
+
+.status-pill-open {
+  background-color: #f0f9ff;
+  color: #0369a1;
+  border: 1px solid #bae6fd;
+}
+
+.status-pill-pending {
+  background-color: #fffbeb;
+  color: #b45309;
+  border: 1px solid #fde68a;
+}
+
+.status-pill-escalated {
+  background-color: #faf5ff;
+  color: #7e22ce;
+  border: 1px solid #e9d5ff;
+}
+
+.status-pill-resolved {
+  background-color: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
+}
+
+.status-pill-closed {
+  background-color: var(--surface-gray-2);
+  color: var(--ink-gray-7);
+  border: 1px solid var(--outline-gray-2);
+}
+
+[data-theme="dark"] .status-pill-open {
+  background-color: rgba(3, 105, 161, 0.2);
+  color: #7dd3fc;
+  border-color: rgba(56, 189, 248, 0.4);
+}
+
+[data-theme="dark"] .status-pill-pending {
+  background-color: rgba(180, 83, 9, 0.2);
+  color: #fcd34d;
+  border-color: rgba(251, 191, 36, 0.4);
+}
+
+[data-theme="dark"] .status-pill-escalated {
+  background-color: rgba(126, 34, 206, 0.2);
+  color: #d8b4fe;
+  border-color: rgba(192, 132, 252, 0.4);
+}
+
+[data-theme="dark"] .status-pill-resolved {
+  background-color: rgba(4, 120, 87, 0.2);
+  color: #6ee7b7;
+  border-color: rgba(52, 211, 153, 0.4);
+}
+
+/* Confidential Internal Note Panel (Agent Timeline) */
+.internal-note-panel {
+  background-color: #fffdf5;
+  border: 1px solid #fef08a;
+  border-left: 3px solid #eab308;
+  border-radius: 0.5rem;
+}
+
+[data-theme="dark"] .internal-note-panel {
+  background-color: rgba(234, 179, 8, 0.08);
+  border-color: rgba(234, 179, 8, 0.3);
+  border-left: 3px solid #eab308;
+}
+
+/* Resolution Hero Callout */
+.resolution-hero-callout {
+  background-color: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-left: 4px solid #16a34a;
+  border-radius: 0.5rem;
+}
+
+[data-theme="dark"] .resolution-hero-callout {
+  background-color: rgba(22, 163, 74, 0.1);
+  border-color: rgba(34, 197, 94, 0.3);
+  border-left: 4px solid #22c55e;
+}

@@ -1,0 +1,113 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "field:automation_name",
+ "creation": "2026-10-17 12:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "is_enabled",
+  "automation_name",
+  "conditions_section",
+  "conditions_json",
+  "actions_section",
+  "actions_json",
+  "description"
+ ],
+ "fields": [
+  {
+   "default": "1",
+   "fieldname": "is_enabled",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Is Enabled"
+  },
+  {
+   "fieldname": "automation_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Automation Name",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "conditions_section",
+   "fieldtype": "Section Break",
+   "label": "Time & Field Conditions"
+  },
+  {
+   "fieldname": "conditions_json",
+   "fieldtype": "Code",
+   "label": "Conditions JSON",
+   "options": "JSON",
+   "description": "Rules for time-based evaluation, e.g. [{\"field\": \"hours_since_last_agent_response\", \"operator\": \">=\", \"value\": 48}, {\"field\": \"status\", \"operator\": \"==\", \"value\": \"Waiting on Customer\"}]"
+  },
+  {
+   "fieldname": "actions_section",
+   "fieldtype": "Section Break",
+   "label": "Actions"
+  },
+  {
+   "fieldname": "actions_json",
+   "fieldtype": "Code",
+   "label": "Actions JSON",
+   "options": "JSON",
+   "description": "Actions to execute, e.g. [{\"action_type\": \"Set Status\", \"value\": \"Resolved\"}, {\"action_type\": \"Add Tag\", \"value\": \"auto-closed\"}]"
+  },
+  {
+   "fieldname": "description",
+   "fieldtype": "Small Text",
+   "label": "Description"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-10-17 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Helpdesk",
+ "name": "HD Automation",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Agent Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Agent"
+  }
+ ],
+ "row_format": "Dynamic",
+ "search_fields": "automation_name",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

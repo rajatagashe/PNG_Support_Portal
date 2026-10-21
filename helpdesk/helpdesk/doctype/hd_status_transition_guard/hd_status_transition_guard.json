@@ -1,0 +1,118 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "format:GUARD-{from_status}-TO-{to_status}-{####}",
+ "creation": "2026-10-17 12:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "is_enabled",
+  "from_status",
+  "to_status",
+  "allowed_roles",
+  "required_fields",
+  "error_message",
+  "description"
+ ],
+ "fields": [
+  {
+   "default": "1",
+   "fieldname": "is_enabled",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Is Enabled"
+  },
+  {
+   "fieldname": "from_status",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "From Status",
+   "options": "HD Ticket Status",
+   "description": "Leave blank to apply when transitioning from any status."
+  },
+  {
+   "fieldname": "to_status",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "To Status",
+   "options": "HD Ticket Status",
+   "reqd": 1
+  },
+  {
+   "fieldname": "allowed_roles",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Allowed Roles",
+   "description": "Comma-separated roles allowed to make this transition (e.g. 'Agent Manager, System Manager'). Leave blank for all agents."
+  },
+  {
+   "fieldname": "required_fields",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Required Fields",
+   "description": "Comma-separated ticket fieldnames required to complete this transition (e.g. 'resolution_details,root_cause')."
+  },
+  {
+   "fieldname": "error_message",
+   "fieldtype": "Small Text",
+   "label": "Custom Error Message",
+   "description": "Custom validation error message shown when this transition guard is violated."
+  },
+  {
+   "fieldname": "description",
+   "fieldtype": "Small Text",
+   "label": "Description"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-10-17 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Helpdesk",
+ "name": "HD Status Transition Guard",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Agent Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Agent"
+  }
+ ],
+ "row_format": "Dynamic",
+ "search_fields": "from_status,to_status",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

@@ -1,0 +1,114 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "field:webhook_name",
+ "creation": "2026-10-18 12:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "is_active",
+  "webhook_name",
+  "target_url",
+  "secret_key",
+  "events",
+  "cgd_filter",
+  "custom_headers",
+  "description"
+ ],
+ "fields": [
+  {
+   "default": "1",
+   "fieldname": "is_active",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Is Active"
+  },
+  {
+   "fieldname": "webhook_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Webhook Name",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "target_url",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Target URL",
+   "reqd": 1
+  },
+  {
+   "fieldname": "secret_key",
+   "fieldtype": "Password",
+   "label": "HMAC Secret Key",
+   "description": "Used to sign outgoing payloads via HMAC SHA-256 header X-Helpdesk-Signature"
+  },
+  {
+   "default": "All",
+   "fieldname": "events",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Trigger Event",
+   "options": "All\nOn Ticket Creation\nOn Ticket Update\nOn Status Change\nOn Ticket Resolution",
+   "reqd": 1
+  },
+  {
+   "fieldname": "cgd_filter",
+   "fieldtype": "Link",
+   "label": "CGD Customer Filter",
+   "options": "HD Customer",
+   "description": "Optional: Only dispatch for tickets belonging to this CGD entity."
+  },
+  {
+   "fieldname": "custom_headers",
+   "fieldtype": "Small Text",
+   "label": "Custom Headers (JSON)",
+   "description": "Optional JSON dictionary of custom HTTP headers."
+  },
+  {
+   "fieldname": "description",
+   "fieldtype": "Small Text",
+   "label": "Description"
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "modified": "2026-10-18 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Helpdesk",
+ "name": "HD Webhook",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 0,
+   "delete": 0,
+   "email": 0,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "HD Team Lead",
+   "share": 0,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
