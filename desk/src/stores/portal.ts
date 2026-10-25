@@ -11,13 +11,13 @@ export const usePortalStore = defineStore("portal", () => {
   const branding = computed(() => brandingResource.data || {});
 
   const brandName = computed(
-    () => branding.value.brand_name || "MyPNG Support Desk"
+    () => branding.value.brand_name || "PNG Support Desk"
   );
   const brandLogo = computed(() => branding.value.brand_logo || "");
   const customerName = computed(() => branding.value.customer_name || "");
   const isVip = computed(() => Boolean(branding.value.is_vip));
   const bannerTitle = computed(
-    () => branding.value.banner_title || "City Gas Distribution (CGD) Support Hub"
+    () => branding.value.banner_title || "PNG Support Desk"
   );
   const bannerSubtitle = computed(
     () =>

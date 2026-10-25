@@ -48,7 +48,7 @@
     v-model="showHelpModal"
     v-model:articles="articles"
     appName="helpdesk"
-    title="Frappe Helpdesk"
+    title="PNG Support Desk"
     :logo="logo"
     docsLink="https://docs.frappe.io/helpdesk"
     :afterSkip="(step: string) => capture('onboarding_step_skipped_' + step)"

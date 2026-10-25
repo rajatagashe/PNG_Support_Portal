@@ -79,6 +79,6 @@ const displayName = computed(() => {
   if (isCustomerPortal.value && portalStore.brandName) {
     return portalStore.brandName;
   }
-  return config.brandName || "PNG Helpdesk";
+  return config.brandName || "PNG Support Desk";
 });
 </script>

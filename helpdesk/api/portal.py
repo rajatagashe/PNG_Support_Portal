@@ -10,7 +10,7 @@ def get_portal_branding():
     """Return dynamic multi-tenant CGD branding for customer portal pages."""
     user = frappe.session.user
 
-    default_brand = frappe.db.get_single_value("HD Settings", "brand_name") or "MyPNG Support Desk"
+    default_brand = frappe.db.get_single_value("HD Settings", "brand_name") or "PNG Support Desk"
     default_logo = frappe.db.get_single_value("HD Settings", "brand_logo")
 
     if not user or user == "Guest":
@@ -21,7 +21,7 @@ def get_portal_branding():
             "brand_name": default_brand,
             "brand_logo": default_logo,
             "domain": None,
-            "banner_title": "City Gas Distribution (CGD) Support Hub",
+            "banner_title": "PNG Support Desk",
             "banner_subtitle": "Unified customer self-service, issue reporting, and knowledge repository.",
             "is_vip": False,
         }
@@ -61,7 +61,7 @@ def get_portal_branding():
         "brand_name": default_brand,
         "brand_logo": default_logo,
         "domain": None,
-        "banner_title": "City Gas Distribution (CGD) Support Hub",
+        "banner_title": "PNG Support Desk",
         "banner_subtitle": "Unified customer self-service, issue reporting, and knowledge repository.",
         "is_vip": False,
     }

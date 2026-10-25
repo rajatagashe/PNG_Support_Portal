@@ -510,6 +510,7 @@
    "options": "HD Ticket Status"
   },
   {
+   "default": "PNG Support Desk",
    "fieldname": "brand_name",
    "fieldtype": "Data",
    "label": "Name"
