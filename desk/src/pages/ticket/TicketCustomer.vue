@@ -26,65 +26,65 @@
       <!-- Main Ticket Comm -->
       <section class="flex flex-col flex-1 w-full md:max-w-[calc(100%-382px)] overflow-y-auto">
         <!-- Visual 4-Step Lifecycle Journey -->
-        <div class="px-6 md:px-8 py-3.5 border-b border-outline-gray-2 bg-surface-white shadow-xs">
+        <div class="px-6 md:px-8 py-4 border-b border-outline-gray-2 bg-surface-white shadow-xs">
           <div class="flex items-center justify-between max-w-2xl mx-auto">
             <!-- Step 1: Raised -->
             <div class="flex flex-col items-center text-center">
-              <div class="size-7 rounded-full flex items-center justify-center text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-300">
-                <LucideCheck class="size-3.5" />
+              <div class="size-8 rounded-full flex items-center justify-center text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-300 ring-4 ring-emerald-50">
+                <LucideCheck class="size-4" />
               </div>
-              <span class="text-[11px] font-semibold text-ink-gray-9 mt-1">{{ __("Raised") }}</span>
+              <span class="text-xs font-semibold text-ink-gray-9 mt-1.5">{{ __("Raised") }}</span>
               <span class="text-[10px] text-ink-gray-5">{{ ticket.data.creation ? ticket.data.creation.substring(0, 10) : "" }}</span>
             </div>
 
             <div
-              class="flex-1 h-0.5 mx-2"
+              class="flex-1 h-1 mx-2 rounded-full transition-all duration-300"
               :class="ticket.data.agent_group ? 'bg-emerald-400' : 'bg-surface-gray-3'"
             ></div>
 
             <!-- Step 2: Assigned -->
             <div class="flex flex-col items-center text-center">
               <div
-                class="size-7 rounded-full flex items-center justify-center text-xs font-bold"
+                class="size-8 rounded-full flex items-center justify-center text-xs font-bold transition-all"
                 :class="
                   ticket.data.agent_group
-                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-300'
+                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-300 ring-4 ring-emerald-50'
                     : 'bg-surface-gray-2 text-ink-gray-6 border border-outline-gray-2'
                 "
               >
-                <LucideCheck v-if="ticket.data.agent_group" class="size-3.5" />
+                <LucideCheck v-if="ticket.data.agent_group" class="size-4" />
                 <span v-else>2</span>
               </div>
-              <span class="text-[11px] font-semibold mt-1" :class="ticket.data.agent_group ? 'text-ink-gray-9' : 'text-ink-gray-5'">
+              <span class="text-xs font-semibold mt-1.5" :class="ticket.data.agent_group ? 'text-ink-gray-9' : 'text-ink-gray-5'">
                 {{ ticket.data.agent_group || __("Triage") }}
               </span>
               <span class="text-[10px] text-ink-gray-5">{{ ticket.data.agent_group ? __("Assigned") : __("Queue") }}</span>
             </div>
 
             <div
-              class="flex-1 h-0.5 mx-2"
+              class="flex-1 h-1 mx-2 rounded-full transition-all duration-300"
               :class="ticket.data.status !== 'Open' ? 'bg-emerald-400' : 'bg-surface-gray-3'"
             ></div>
 
             <!-- Step 3: Investigation / Escalation -->
             <div class="flex flex-col items-center text-center">
               <div
-                class="size-7 rounded-full flex items-center justify-center text-xs font-bold"
+                class="size-8 rounded-full flex items-center justify-center text-xs font-bold transition-all"
                 :class="
                   ticket.data.status === 'Resolved' || ticket.data.status === 'Closed'
-                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-300'
+                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-300 ring-4 ring-emerald-50'
                     : ticket.data.is_escalated
-                    ? 'bg-purple-50 text-purple-700 border border-purple-300'
+                    ? 'bg-purple-50 text-purple-700 border border-purple-300 ring-4 ring-purple-100'
                     : ticket.data.status !== 'Open'
-                    ? 'bg-amber-50 text-amber-700 border border-amber-300'
+                    ? 'bg-amber-50 text-amber-700 border border-amber-300 ring-4 ring-amber-100'
                     : 'bg-surface-gray-2 text-ink-gray-6 border border-outline-gray-2'
                 "
               >
-                <LucideCheck v-if="ticket.data.status === 'Resolved' || ticket.data.status === 'Closed'" class="size-3.5" />
-                <LucideArrowUpRight v-else-if="ticket.data.is_escalated" class="size-3.5" />
+                <LucideCheck v-if="ticket.data.status === 'Resolved' || ticket.data.status === 'Closed'" class="size-4" />
+                <LucideArrowUpRight v-else-if="ticket.data.is_escalated" class="size-4" />
                 <span v-else>3</span>
               </div>
-              <span class="text-[11px] font-semibold mt-1" :class="ticket.data.is_escalated ? 'text-purple-700' : 'text-ink-gray-9'">
+              <span class="text-xs font-semibold mt-1.5" :class="ticket.data.is_escalated ? 'text-purple-700' : 'text-ink-gray-9'">
                 {{ ticket.data.is_escalated ? __("Tier 2 Review") : __("Investigation") }}
               </span>
               <span class="text-[10px] text-ink-gray-5">
@@ -93,24 +93,24 @@
             </div>
 
             <div
-              class="flex-1 h-0.5 mx-2"
+              class="flex-1 h-1 mx-2 rounded-full transition-all duration-300"
               :class="ticket.data.status === 'Resolved' || ticket.data.status === 'Closed' ? 'bg-emerald-400' : 'bg-surface-gray-3'"
             ></div>
 
             <!-- Step 4: Resolution -->
             <div class="flex flex-col items-center text-center">
               <div
-                class="size-7 rounded-full flex items-center justify-center text-xs font-bold"
+                class="size-8 rounded-full flex items-center justify-center text-xs font-bold transition-all"
                 :class="
                   ticket.data.status === 'Resolved' || ticket.data.status === 'Closed'
-                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-400'
+                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-400 ring-4 ring-emerald-50'
                     : 'bg-surface-gray-2 text-ink-gray-6 border border-outline-gray-2'
                 "
               >
-                <LucideCheckCircle2 v-if="ticket.data.status === 'Resolved' || ticket.data.status === 'Closed'" class="size-4 text-emerald-600" />
+                <LucideCheckCircle2 v-if="ticket.data.status === 'Resolved' || ticket.data.status === 'Closed'" class="size-4.5 text-emerald-600" />
                 <span v-else>4</span>
               </div>
-              <span class="text-[11px] font-semibold mt-1" :class="ticket.data.status === 'Resolved' || ticket.data.status === 'Closed' ? 'text-emerald-700' : 'text-ink-gray-5'">
+              <span class="text-xs font-semibold mt-1.5" :class="ticket.data.status === 'Resolved' || ticket.data.status === 'Closed' ? 'text-emerald-700 font-bold' : 'text-ink-gray-5'">
                 {{ __("Resolved") }}
               </span>
               <span class="text-[10px] text-ink-gray-5">

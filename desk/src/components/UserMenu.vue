@@ -23,8 +23,15 @@
           <div class="text-base-medium leading-none text-ink-gray-9 truncate">
             {{ displayName }}
           </div>
-          <div class="mt-1 text-sm text-ink-gray-7">
-            {{ authStore.userName }}
+          <div class="mt-1 text-sm text-ink-gray-7 flex items-center gap-1.5">
+            <span class="truncate">{{ authStore.userName }}</span>
+            <span
+              v-if="!isCustomerPortal"
+              class="px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider"
+              :class="authStore.isAdmin ? 'bg-surface-gray-3 text-ink-gray-9 border border-outline-gray-3' : 'bg-surface-gray-2 text-ink-gray-7 border border-outline-gray-2'"
+            >
+              {{ authStore.isAdmin ? __('Admin') : __('User') }}
+            </span>
           </div>
         </div>
         <div
@@ -53,6 +60,7 @@ import { useConfigStore } from "@/stores/config";
 import { usePortalStore } from "@/stores/portal";
 import { useSidebarStore } from "@/stores/sidebar";
 import { isCustomerPortal } from "@/utils";
+import { __ } from "@/translation";
 import { Dropdown } from "frappe-ui";
 import { computed } from "vue";
 

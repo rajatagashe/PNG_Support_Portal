@@ -4,20 +4,11 @@ import json
 import frappe
 from frappe import _
 from frappe.utils import add_days, flt, now_datetime, nowdate
-from helpdesk.utils import agent_only
-
-
-class ExportResult(dict):
-    """Dictionary holding exported file content that also supports substring membership testing."""
-    def __contains__(self, key):
-        return super().__contains__(key) or (key in self.get("csv_content", ""))
-
-    def __str__(self):
-        return self.get("csv_content", "")
+from helpdesk.utils import admin_only, agent_only
 
 
 @frappe.whitelist()
-@agent_only
+@admin_only
 def generate_ticket_report(
     group_by="customer",
     date_from=None,
@@ -149,7 +140,7 @@ def generate_ticket_report(
 
 
 @frappe.whitelist()
-@agent_only
+@admin_only
 def export_report_csv(
     group_by="customer",
     date_from=None,
@@ -196,20 +187,15 @@ def export_report_csv(
     csv_content = output.getvalue()
     filename = f"helpdesk_{group_by}_report_{now_datetime().strftime('%Y%m%d_%H%M%S')}.csv"
 
-    if hasattr(frappe, "response"):
-        frappe.response["result"] = csv_content
-        frappe.response["type"] = "csv"
-        frappe.response["doctype"] = f"{group_by}_report"
-
-    return ExportResult({
+    return {
         "csv_content": csv_content,
         "filename": filename,
         "total_rows": len(report.get("rows", [])),
-    })
+    }
 
 
 @frappe.whitelist()
-@agent_only
+@admin_only
 def export_report_xlsx(
     group_by="customer",
     date_from=None,
@@ -297,7 +283,7 @@ def export_report_xlsx(
 
 
 @frappe.whitelist()
-@agent_only
+@admin_only
 def export_report_json(
     group_by="customer",
     date_from=None,
@@ -345,7 +331,7 @@ def export_report_json(
 
 
 @frappe.whitelist()
-@agent_only
+@admin_only
 def export_report_html(
     group_by="customer",
     date_from=None,
@@ -535,7 +521,7 @@ def export_report_html(
 
 
 @frappe.whitelist()
-@agent_only
+@admin_only
 def get_cgd_entity_breakdown(date_from=None, date_to=None):
     """Retrieve operational metrics specifically broken down by City Gas Distribution (CGD) entities."""
     conditions = ["1=1"]
@@ -631,7 +617,7 @@ def get_cgd_entity_breakdown(date_from=None, date_to=None):
 
 
 @frappe.whitelist()
-@agent_only
+@admin_only
 def get_hourly_ticket_heatmap(days=7):
     """Aggregate ticket inflow and resolution by hour of the day (0-23) over the trailing period."""
     days = int(days or 7)
@@ -682,7 +668,7 @@ def get_hourly_ticket_heatmap(days=7):
 
 
 @frappe.whitelist()
-@agent_only
+@admin_only
 def send_scheduled_analytics_digest(recipients=None):
     """Generate and dispatch scheduled support analytics digest to team leads or specified recipients."""
     if not recipients:

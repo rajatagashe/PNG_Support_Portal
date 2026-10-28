@@ -10,6 +10,7 @@ from frappe import _
 from frappe.desk.form.assign_to import clear as clear_all_assignments
 from frappe.utils import (
     add_days,
+    add_to_date,
     cint,
     format_datetime,
     get_datetime,
@@ -17,54 +18,143 @@ from frappe.utils import (
     now_datetime,
     nowdate,
 )
-from helpdesk.utils import agent_only
+from helpdesk.utils import agent_only, agent_or_email_user_only, publish_event
+
+# the scheduler waits this long before retrying a mailbox that just failed
+SCHEDULED_RETRY_BACKOFF_MINUTES = 5
+
+
+def get_sync_error_message(error_type: str) -> str:
+    """Shown instead of the raw error, which can name servers or carry provider detail."""
+    messages = {
+        "authorization_required": _(
+            "The support mailbox needs to be authorized again. Ask an administrator to reconnect it."
+        ),
+        "authentication_failed": _("The mail server rejected the support mailbox login."),
+        "app_access_denied": _(
+            "Microsoft rejected the app's access to the mailbox. An administrator must grant"
+            " the app IMAP and SMTP access in Exchange Online."
+        ),
+        "connection_failed": _("Could not reach the mail server. It will retry automatically."),
+        "processing_failed": _(
+            "Some emails could not be processed. They were set aside for review."
+        ),
+    }
+    return messages.get(error_type) or _("Email sync failed. It will retry automatically.")
+
+
+# FROM clause of the received emails of ticket `t` nobody has opened yet
+UNREAD_EMAILS_SQL = (
+    "FROM `tabCommunication` u WHERE u.reference_doctype = 'HD Ticket'"
+    " AND u.reference_name = t.name AND u.sent_or_received = 'Received'"
+    " AND u.communication_medium = 'Email' AND u.seen = 0"
+)
+# files on ticket `t` or on any of its emails
+ATTACHMENTS_SQL = (
+    "SELECT 1 FROM `tabFile` f WHERE (f.attached_to_doctype = 'HD Ticket' AND f.attached_to_name = t.name)"
+    " OR (f.attached_to_doctype = 'Communication' AND f.attached_to_name IN"
+    " (SELECT a.name FROM `tabCommunication` a WHERE a.reference_doctype = 'HD Ticket'"
+    " AND a.reference_name = t.name))"
+)
+
+
+def get_support_email_accounts(
+    account_name: str | None = None, include_disabled: bool = False
+) -> list[dict]:
+    """Email Accounts that create HD Tickets, directly or through an IMAP folder.
+
+    Only incoming-enabled ones by default; a mailbox waiting for its OAuth sign-in is off.
+    """
+    accounts = frappe.qb.DocType("Email Account")
+    folders = frappe.qb.DocType("IMAP Folder")
+    query = (
+        frappe.qb.from_(accounts)
+        .left_join(folders)
+        .on((folders.parent == accounts.name) & (folders.parenttype == "Email Account"))
+        .select(
+            accounts.name,
+            accounts.email_id,
+            accounts.auth_method,
+            accounts.connected_app,
+            accounts.connected_user,
+            accounts.backend_app_flow,
+            accounts.enable_incoming,
+        )
+        .distinct()
+        .where((accounts.append_to == "HD Ticket") | (folders.append_to == "HD Ticket"))
+    )
+    if not include_disabled:
+        query = query.where(accounts.enable_incoming == 1)
+    if account_name:
+        query = query.where(accounts.name == account_name)
+    return query.run(as_dict=True)
+
+
+def pull_support_mailbox(email_account) -> dict:
+    """Pull one mailbox and report the outcome without exposing the underlying error."""
+    entry = {"account": email_account.name, "email_id": email_account.email_id}
+    if email_account.auth_method == "OAuth" and not email_account.has_oauth_token():
+        return sync_failure(entry, "authorization_required")
+
+    started_at = now_datetime()
+    try:
+        email_account.receive()
+    except Exception:
+        # receive raises after the batch when a mail failed; that mail is parked
+        frappe.log_error(title=f"Support Email Sync Error: {email_account.name}")
+        return sync_failure(entry, "processing_failed", count_new_emails(email_account.name, started_at))
+
+    if email_account.flags.pull_in_progress:
+        message = _("A sync of this mailbox is already running.")
+        return {**entry, "status": "in_progress", "new_emails": 0, "message": message}
+
+    status = email_account.get_sync_status()
+    if status.get("state") == "error" and status.get("last_failure_at", started_at) >= started_at:
+        return sync_failure(entry, status.get("error_type") or "sync_failed")
+
+    return {**entry, "status": "success", "new_emails": count_new_emails(email_account.name, started_at)}
+
+
+def sync_failure(entry: dict, error_type: str, new_emails: int = 0) -> dict:
+    return {
+        **entry,
+        "status": "failed",
+        "error_type": error_type,
+        "message": get_sync_error_message(error_type),
+        "new_emails": new_emails,
+    }
+
+
+def count_new_emails(email_account: str, since) -> int:
+    return frappe.db.count(
+        "Communication",
+        {
+            "email_account": email_account,
+            "sent_or_received": "Received",
+            "creation": [">=", since],
+        },
+    )
 
 
 @frappe.whitelist()
-@agent_only
+@agent_or_email_user_only
 def sync_support_emails(account_name=None):
-    """
-    On-demand email synchronization for incoming support mailboxes.
-    Retrieves latest unread support emails and processes them into tickets without full page reload.
-    """
-    filters = {"enable_incoming": 1}
-    if account_name:
-        filters["name"] = account_name
-
-    accounts = frappe.get_all("Email Account", filters=filters, fields=["name", "email_id", "service"])
+    """Pull new mail from the support mailboxes now and report what arrived."""
     synced_accounts = []
-    total_new_emails = 0
     errors = []
+    for acc in get_support_email_accounts(account_name):
+        result = pull_support_mailbox(frappe.get_doc("Email Account", acc.name))
+        if result["status"] == "failed":
+            errors.append(result)
+        else:
+            synced_accounts.append(result)
 
-    for acc in accounts:
-        try:
-            email_account = frappe.get_doc("Email Account", acc.name)
-            # Inbound mail receive fetches and processes unread messages
-            received_mails = email_account.receive() or []
-            new_count = len(received_mails)
-            total_new_emails += new_count
-            synced_accounts.append({
-                "account": acc.name,
-                "email_id": acc.email_id,
-                "new_emails": new_count,
-                "status": "success",
-            })
-        except Exception as e:
-            # Secure error logging - never expose passwords or credentials in response
-            error_msg = str(e)
-            frappe.log_error(
-                title=f"Support Email Sync Error: {acc.name}",
-                message=frappe.get_traceback(),
-            )
-            errors.append({
-                "account": acc.name,
-                "email_id": acc.email_id,
-                "status": "failed",
-                "message": error_msg[:120],
-            })
+    total_new_emails = sum(r["new_emails"] for r in synced_accounts + errors)
+    if total_new_emails:
+        publish_event("helpdesk:support-email-synced", data={"total_new_emails": total_new_emails})
 
     return {
-        "success": len(errors) == 0 or total_new_emails > 0,
+        "success": not errors or total_new_emails > 0,
         "total_new_emails": total_new_emails,
         "synced_accounts": synced_accounts,
         "errors": errors,
@@ -73,7 +163,7 @@ def sync_support_emails(account_name=None):
 
 
 @frappe.whitelist()
-@agent_only
+@agent_or_email_user_only
 def get_support_emails(
     page=1,
     page_length=20,
@@ -85,10 +175,11 @@ def get_support_emails(
     date_from=None,
     date_to=None,
     search_text=None,
+    read_state=None,
 ):
     """
     Retrieve and display incoming support emails with sender details, Message-ID,
-    associated CGD organization, and assignment details.
+    associated CGD organization, assignment details and read state.
     """
     page = cint(page) or 1
     page_length = min(cint(page_length) or 20, 100)
@@ -119,8 +210,16 @@ def get_support_emails(
         conditions.append("t.creation <= %(date_to)s")
         values["date_to"] = date_to
     if search_text:
-        conditions.append("(t.subject LIKE %(search)s OR t.name LIKE %(search)s OR t.raised_by LIKE %(search)s)")
+        conditions.append(
+            "(t.subject LIKE %(search)s OR t.name LIKE %(search)s OR t.raised_by LIKE %(search)s"
+            " OR EXISTS (SELECT 1 FROM `tabCommunication` s WHERE s.reference_doctype = 'HD Ticket'"
+            " AND s.reference_name = t.name AND (s.content LIKE %(search)s"
+            " OR s.sender_full_name LIKE %(search)s)))"
+        )
         values["search"] = f"%{search_text}%"
+    if read_state in ("unread", "read"):
+        negate = "" if read_state == "unread" else "NOT "
+        conditions.append(f"{negate}EXISTS (SELECT 1 {UNREAD_EMAILS_SQL})")
 
     where_clause = " AND ".join(conditions)
 
@@ -149,6 +248,16 @@ def get_support_emails(
             t.modified as last_modified,
             t.resolution_date,
             c.message_id as original_message_id,
+            (SELECT n.sender_full_name FROM `tabCommunication` n
+                WHERE n.reference_doctype = 'HD Ticket' AND n.reference_name = t.name
+                AND n.sent_or_received = 'Received' AND n.sender = t.raised_by
+                AND IFNULL(n.sender_full_name, '') != ''
+                ORDER BY n.creation LIMIT 1) as sender_full_name,
+            (SELECT COUNT(*) {UNREAD_EMAILS_SQL}) as unread_count,
+            (SELECT MAX(r.communication_date) FROM `tabCommunication` r
+                WHERE r.reference_doctype = 'HD Ticket' AND r.reference_name = t.name
+                AND r.sent_or_received = 'Received') as last_received_at,
+            EXISTS ({ATTACHMENTS_SQL}) as has_attachments,
             SUBSTRING(REPLACE(REPLACE(COALESCE(c.content, t.description, ''), '<br>', ' '), '\n', ' '), 1, 150) as preview
         FROM `tabHD Ticket` t
         LEFT JOIN `tabHD Customer` cust ON cust.name = t.customer
@@ -179,7 +288,8 @@ def get_support_emails(
             "ticket_id": r.ticket_id,
             "subject": r.subject or _("No Subject"),
             "sender_email": r.sender_email,
-            "sender_name": r.sender_email.split("@")[0] if r.sender_email else _("Unknown"),
+            "sender_name": r.sender_full_name
+            or (r.sender_email.split("@")[0] if r.sender_email else _("Unknown")),
             "cgd_id": r.cgd_id,
             "cgd_name": r.cgd_name or r.cgd_id or _("Unassigned CGD"),
             "is_vip": bool(r.cgd_is_vip),
@@ -195,6 +305,10 @@ def get_support_emails(
             "resolution_date": str(r.resolution_date) if r.resolution_date else None,
             "original_message_id": r.original_message_id or f"msg-{r.ticket_id}@mypng.local",
             "preview": (r.preview or "").strip(),
+            "unread_count": cint(r.unread_count),
+            "is_unread": cint(r.unread_count) > 0,
+            "has_attachments": bool(r.has_attachments),
+            "last_received_at": str(r.last_received_at) if r.last_received_at else None,
         })
 
     return {
@@ -207,7 +321,7 @@ def get_support_emails(
 
 
 @frappe.whitelist()
-@agent_only
+@agent_or_email_user_only
 def get_email_dashboard_analytics(
     view_mode="daily",
     selected_date=None,
@@ -560,7 +674,7 @@ def get_ticket_assignment_history(ticket_id):
 
 
 @frappe.whitelist()
-@agent_only
+@agent_or_email_user_only
 def export_email_report_xlsx(
     date_from=None,
     date_to=None,
@@ -719,11 +833,6 @@ def export_email_report_xlsx(
 
     filename = f"Support_Email_Report_{now_datetime().strftime('%Y%m%d_%H%M%S')}.xlsx"
 
-    if hasattr(frappe, "response"):
-        frappe.response["filename"] = filename
-        frappe.response["filecontent"] = xlsx_bytes
-        frappe.response["type"] = "binary"
-
     import base64
     b64_content = base64.b64encode(xlsx_bytes).decode("utf-8")
 
@@ -736,7 +845,7 @@ def export_email_report_xlsx(
 
 
 @frappe.whitelist()
-@agent_only
+@agent_or_email_user_only
 def export_email_report_csv(
     date_from=None,
     date_to=None,
@@ -799,11 +908,6 @@ def export_email_report_csv(
     csv_content = output.getvalue()
     filename = f"Support_Email_Report_{now_datetime().strftime('%Y%m%d_%H%M%S')}.csv"
 
-    if hasattr(frappe, "response"):
-        frappe.response["result"] = csv_content
-        frappe.response["type"] = "csv"
-        frappe.response["doctype"] = "support_email_report"
-
     return {
         "csv_content": csv_content,
         "filename": filename,
@@ -812,16 +916,22 @@ def export_email_report_csv(
 
 
 def scheduled_sync_support_emails():
-    """
-    Background scheduler entrypoint to synchronize incoming support emails.
-    Automatically polls active support email accounts and syncs new emails.
-    """
-    frappe.logger("helpdesk").info("[Scheduler] Starting scheduled sync of support emails.")
-    try:
-        res = sync_support_emails()
-        frappe.logger("helpdesk").info(f"[Scheduler] Completed scheduled sync: {res}")
-        return res
-    except Exception as e:
-        frappe.log_error(f"Failed scheduled support email sync: {str(e)}", "Support Email Scheduled Sync")
-        return {"success": False, "error": str(e)}
+    """Scheduler entrypoint (every minute): pull each support mailbox, backing off after a failure."""
+    total_new_emails = 0
+    for acc in get_support_email_accounts():
+        email_account = frappe.get_doc("Email Account", acc.name)
+        if is_backing_off(email_account.get_sync_status()):
+            continue
+        total_new_emails += pull_support_mailbox(email_account)["new_emails"]
+
+    if total_new_emails:
+        publish_event("helpdesk:support-email-synced", data={"total_new_emails": total_new_emails})
+
+
+def is_backing_off(status: dict) -> bool:
+    """A mailbox that failed recently is retried later, so a broken one doesn't log every minute."""
+    if status.get("state") != "error" or not status.get("last_failure_at"):
+        return False
+    retry_at = add_to_date(status["last_failure_at"], minutes=SCHEDULED_RETRY_BACKOFF_MINUTES)
+    return now_datetime() < retry_at
 

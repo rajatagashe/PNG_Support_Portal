@@ -31,12 +31,14 @@ from helpdesk.notifications import clear as clear_notifications
 from helpdesk.notifications import notify_ticket_reopened
 from helpdesk.utils import (
     agent_only,
+    agent_or_email_user_only,
     capture_event,
     get_agents_team,
     get_customers,
     get_doc_room,
     is_admin,
     is_agent,
+    is_support_email_only,
     publish_event,
 )
 
@@ -992,7 +994,7 @@ class HDTicket(Document, CustomerEditController):
             self.attach_file_with_doc("Comment", comment, url)
 
     @frappe.whitelist()
-    @agent_only
+    @agent_or_email_user_only
     def reply_via_agent(
         self,
         message: str,
@@ -1003,7 +1005,8 @@ class HDTicket(Document, CustomerEditController):
         attachments: list[str] = [],
         propagate_to_incidents: bool = False,
     ):
-        if not is_agent():
+        # support email users answer from the Support Email Management page
+        if not (is_agent() or is_support_email_only()):
             frappe.throw(
                 _("You are not permitted to reply as an agent"), frappe.PermissionError
             )
@@ -1454,6 +1457,9 @@ class HDTicket(Document, CustomerEditController):
         # portal replies save as the customer; the reset must keep server-set fields
         self.flags.ignore_permlevel_for_fields = list(SERVER_COMPUTED_FIELDS)
         self.flags.ignore_customer_edit_guard = True
+        # a support email user's reply records response times on a ticket they cannot edit
+        if is_support_email_only():
+            self.flags.ignore_permissions = True
         # Save the ticket, allowing for hooks to run.
         self.save()
 

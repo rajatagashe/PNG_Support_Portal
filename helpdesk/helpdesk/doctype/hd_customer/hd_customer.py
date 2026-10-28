@@ -17,7 +17,12 @@ from helpdesk.integrations.erpnext.utils import (
     sync_related_fields,
     validate_rename_conflict,
 )
-from helpdesk.utils import agent_only, get_customers, is_agent
+from helpdesk.utils import (
+    agent_only,
+    get_customers,
+    is_agent,
+    is_support_email_only,
+)
 
 CUSTOMER_ROLES = ("HD Customer", "HD Customer Manager")
 
@@ -460,7 +465,8 @@ class HDCustomer(Document):
 # Custom perms for list query. Only the `WHERE` part
 # Used so that contact raising the ticket can see the customers they are part of
 def permission_query(user: str) -> str:
-    if is_agent(user):
+    # Support email users filter their emails by CGD, so they read every customer
+    if is_agent(user) or is_support_email_only(user):
         return ""
 
     customers = get_customers(user)
@@ -475,10 +481,12 @@ def has_permission(doc: Document, ptype: str, user: str) -> bool:
     """Per-record access for HD Customer.
 
     Members of a customer can read it; only managers can write or delete it.
-    Agents are unrestricted; non-members are denied.
+    Agents are unrestricted; support email users only read; non-members are denied.
     """
     if is_agent(user):
         return True
+    if is_support_email_only(user):
+        return ptype in ("read", "select")
 
     membership = get_customer_membership(doc.name, user)
     if not membership:

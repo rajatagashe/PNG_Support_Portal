@@ -151,43 +151,40 @@ const customerPortalDropdown = computed(() => [
   },
 ]);
 
-const agentPortalDropdown = computed(() => [
-  appsMenuOption.value,
-  {
-    label: __("Customer portal"),
-    icon: "lucide-users",
-    onClick: () => {
-      const path = router.resolve({ name: "TicketsCustomer" });
-      window.open(path.href);
-    },
-  },
-  {
-    icon: "lucide-life-buoy",
-    label: __("Support"),
-    onClick: () => window.open("https://t.me/frappedesk"),
-  },
-  {
-    icon: "lucide-book-open",
-    label: __("Docs"),
-    onClick: () => window.open("https://docs.frappe.io/helpdesk"),
-  },
-  {
-    label: __("Login to Frappe Cloud"),
-    icon: FrappeCloudIcon,
-    onClick: () => confirmLoginToFrappeCloud(),
-    condition: () => !isMobileView.value && window.is_fc_site,
-  },
-  {
-    label: __("Shortcuts"),
-    icon: h(LucideKeyboard),
-    onClick: () => (showShortcutsModal.value = true),
-  },
-  {
-    label: __("Settings"),
-    icon: "lucide-settings",
-    onClick: () => (showSettingsModal.value = true),
-  },
-  {
+const agentPortalDropdown = computed(() => {
+  const items = [];
+  if (authStore.isAdmin) {
+    items.push(appsMenuOption.value);
+    items.push({
+      label: __("Customer portal"),
+      icon: "lucide-users",
+      onClick: () => {
+        const path = router.resolve({ name: "TicketsCustomer" });
+        window.open(path.href);
+      },
+    });
+    items.push({
+      icon: "lucide-life-buoy",
+      label: __("Support"),
+      onClick: () => window.open("https://t.me/frappedesk"),
+    });
+    items.push({
+      icon: "lucide-book-open",
+      label: __("Docs"),
+      onClick: () => window.open("https://docs.frappe.io/helpdesk"),
+    });
+    items.push({
+      label: __("Shortcuts"),
+      icon: h(LucideKeyboard),
+      onClick: () => (showShortcutsModal.value = true),
+    });
+    items.push({
+      label: __("Settings"),
+      icon: "lucide-settings",
+      onClick: () => (showSettingsModal.value = true),
+    });
+  }
+  items.push({
     group: __("Danger"),
     hideLabel: true,
     options: [
@@ -197,8 +194,9 @@ const agentPortalDropdown = computed(() => [
         onClick: () => authStore.logout(),
       },
     ],
-  },
-]);
+  });
+  return items;
+});
 
 const profileSettings = computed(() => {
   return isCustomerPortal.value

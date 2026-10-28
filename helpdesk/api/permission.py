@@ -4,8 +4,10 @@ ALLOWED_APP_ROLES = {
     "Agent",
     "Agent Manager",
     "System Manager",
+    "Administrator",
     "HD Customer",
     "HD Customer Manager",
+    "HD Support Email User",
 }
 
 

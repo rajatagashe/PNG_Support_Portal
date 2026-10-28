@@ -1,4 +1,8 @@
+import imaplib
+import poplib
 import re
+import smtplib
+import sys
 from email import message_from_string
 
 import frappe
@@ -7,7 +11,26 @@ from frappe.core.doctype.communication.communication import Communication
 from frappe.email.doctype.email_account.email_account import EmailAccount
 from frappe.email.doctype.email_queue.email_queue import EmailQueue
 from frappe.email.receive import InboundMail
-from frappe.utils import parse_addr
+from frappe.integrations.doctype.connected_app.connected_app import has_token
+from frappe.utils import now_datetime, parse_addr
+from frappe.utils.file_lock import LockTimeoutError
+from frappe.utils.synchronization import filelock
+
+from helpdesk.utils import publish_event
+
+# connection health of each mailbox, read by the Support Email Management page
+MAILBOX_STATUS_CACHE_KEY = "helpdesk:support_mailbox_status"
+MAILBOX_STATUS_EVENT = "helpdesk:support-mailbox-status"
+# a pull already running holds the lock; a long sync can take this long to finish
+PULL_LOCK_TIMEOUT = 60
+AUTH_ERROR_HINTS = (
+    "authenticat",
+    "login failed",
+    "invalid credentials",
+    "password",
+    "invalid_client",
+    "unauthorized_client",
+)
 
 
 def auto_generated_reason(msg) -> str | None:
@@ -102,6 +125,71 @@ class CustomInboundMail(InboundMail):
 
 
 class CustomEmailAccount(EmailAccount):
+    def receive(self):
+        """Pull one mailbox at a time, so the cron, Frappe's own pull and Sync now
+        never fetch the same mail twice and race to create the same ticket."""
+        try:
+            with filelock(self.get_pull_lock_name(), timeout=PULL_LOCK_TIMEOUT):
+                return super().receive()
+        except LockTimeoutError:
+            self.flags.pull_in_progress = True
+
+    def get_pull_lock_name(self) -> str:
+        return f"helpdesk_mail_pull_{frappe.scrub(self.name)}"
+
+    def get_sync_status(self) -> dict:
+        """Last known connection result of this mailbox, empty if never synced."""
+        return frappe.cache.hget(MAILBOX_STATUS_CACHE_KEY, self.name) or {}
+
+    def record_sync_success(self):
+        self.save_sync_status(
+            {"state": "connected", "error_type": None, "last_success_at": now_datetime()}
+        )
+
+    def record_sync_failure(self):
+        """Call from an except block: classifies the exception being handled."""
+        self.save_sync_status(
+            {
+                "state": "error",
+                "error_type": self.classify_sync_error(sys.exc_info()[1]),
+                "last_failure_at": now_datetime(),
+            }
+        )
+
+    def save_sync_status(self, changes: dict):
+        status = self.get_sync_status()
+        changed = any(status.get(key) != changes[key] for key in ("state", "error_type"))
+        status.update(changes)
+        frappe.cache.hset(MAILBOX_STATUS_CACHE_KEY, self.name, status)
+        if changed:
+            publish_event(MAILBOX_STATUS_EVENT)
+
+    def classify_sync_error(self, exc: BaseException | None) -> str:
+        """Map a connection error to a kind the page can explain without showing it."""
+        kind = "sync_failed"
+        message = str(exc or "").lower()
+        if any(hint in message for hint in AUTH_ERROR_HINTS) or isinstance(
+            exc, smtplib.SMTPAuthenticationError
+        ):
+            kind = "authentication_failed"
+        elif isinstance(exc, (OSError, imaplib.IMAP4.abort, poplib.error_proto)):
+            kind = "connection_failed"
+
+        if self.auth_method != "OAuth":
+            return kind
+        # app-only access has no sign-in to redo; a rejected login means missing grants
+        if self.backend_app_flow:
+            return "app_access_denied" if kind == "authentication_failed" else kind
+        # a delegated mailbox that cannot log in needs someone to sign in again
+        if kind == "authentication_failed" or not self.has_oauth_token():
+            return "authorization_required"
+        return kind
+
+    def has_oauth_token(self) -> bool:
+        if self.backend_app_flow:
+            return True
+        return bool(self.connected_app) and has_token(self.connected_app, self.connected_user)
+
     def handle_bad_emails(self, uid, raw, reason):
         """The framework version only records for IMAP; POP3 and Frappe
         Mail drops deserve the same trace, so this one has no gate."""
@@ -264,6 +352,8 @@ class CustomEmailAccount(EmailAccount):
             self.log_error(
                 title=_("Error while connecting to email account {0}").format(self.name)
             )
+            self.record_sync_failure()
             return []
 
+        self.record_sync_success()
         return mails

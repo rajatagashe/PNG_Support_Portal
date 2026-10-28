@@ -48,5 +48,12 @@ e2e/.auth
 playwright-report
 test-results
 
-# Oracle deploy secrets
+# Environment & Secret files
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+*.cert
+secrets/
 deploy/oracle/.env

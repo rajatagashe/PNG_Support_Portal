@@ -13,6 +13,7 @@ from helpdesk.utils import (
     check_permissions,
     contact_default_columns,
     contact_default_rows,
+    is_support_email_only,
     parse_call_logs,
 )
 
@@ -33,6 +34,14 @@ def get_list_data(
     view: dict | None = None,
     is_default: bool = False,
 ) -> dict:
+    # Support Email Management users have no list views, so block every doctype
+    if is_support_email_only():
+        frappe.throw(
+            msg=_("You are not permitted to access {0}.").format(doctype),
+            title=_("Not Allowed"),
+            exc=frappe.PermissionError,
+        )
+
     is_custom = False
 
     rows = frappe.parse_json(rows or "[]")

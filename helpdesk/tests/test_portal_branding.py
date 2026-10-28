@@ -13,12 +13,12 @@ class TestPortalBranding(FrappeTestCase):
         frappe.set_user("Administrator")
 
     def test_guest_portal_branding(self):
-        """Guest user receives default MyPNG system branding."""
+        """Guest user receives default PNG Support Desk branding."""
         frappe.set_user("Guest")
         branding = get_portal_branding()
         self.assertFalse(branding["is_customer"])
         self.assertIn("Support", branding["brand_name"])
-        self.assertIn("City Gas Distribution", branding["banner_title"])
+        self.assertEqual(branding["banner_title"], "PNG Support Desk")
         self.assertFalse(branding["is_vip"])
 
     def test_customer_portal_branding(self):

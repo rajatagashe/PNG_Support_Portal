@@ -3,7 +3,7 @@
     v-if="logoSrc"
     :src="logoSrc"
     alt="Brand Logo"
-    class="h-8 w-8 shrink-0 object-cover rounded-md"
+    class="h-8 w-8 shrink-0 object-contain rounded-md"
   />
   <HDLogo v-else class="h-8 w-8 shrink-0 rounded-4" />
 </template>

@@ -2,11 +2,13 @@ import { useScreenSize } from "@/composables/screen";
 import { canViewPersona, personaInterrupt } from "@/persona";
 import { useAuthStore } from "@/stores/auth";
 import { useUserStore } from "@/stores/user";
+import { __ } from "@/translation";
 import { isCustomerPortal } from "@/utils";
+import { toast } from "frappe-ui";
 import { createRouter, createWebHistory } from "vue-router";
 const { isMobileView } = useScreenSize();
 
-export const LOGIN_PAGE = "/login";
+export const LOGIN_PAGE = "/helpdesk/login";
 
 // type the meta fields
 declare module "vue-router" {
@@ -34,6 +36,11 @@ const portalRoutes = [
     component: () => import("@/pages/home/Home.vue"),
   },
 
+  {
+    path: "/support-emails",
+    name: "SupportEmails",
+    component: () => import("@/pages/support-emails/SupportEmails.vue"),
+  },
   {
     path: "/tickets",
     name: "TicketsAgent",
@@ -212,6 +219,13 @@ const portalRoutes = [
 ];
 
 const routes = [
+  // Standalone Portal Login Page
+  {
+    path: "/login",
+    name: "Login",
+    component: () => import("@/pages/Login.vue"),
+    meta: { public: true },
+  },
   // Renders bare — no portal chrome.
   {
     path: "/onboarding",
@@ -238,6 +252,12 @@ export const router = createRouter({
 router.beforeEach(async (to, _, next) => {
   const authStore = useAuthStore();
   isCustomerPortal.value = to.meta.public || false;
+
+  // Handle Login page navigation: allow viewing the login page directly
+  if (to.name === "Login") {
+    return next();
+  }
+
   if (authStore.isLoggedIn) {
     await authStore.init();
   }
@@ -246,12 +266,25 @@ router.beforeEach(async (to, _, next) => {
   if (interrupt) return next(interrupt);
 
   if (!authStore.isLoggedIn) {
-    const redirectURL = to.fullPath !== "/" ? to.fullPath : "";
+    return next({
+      name: "Login",
+      query: to.fullPath !== "/" ? { "redirect-to": to.fullPath } : undefined,
+    });
+  }
 
-    window.location.href =
-      LOGIN_PAGE +
-      (redirectURL ? `?redirect-to=/helpdesk${redirectURL}` : "/helpdesk");
-  } else if (to.name === "TicketAgent" && !authStore.isAgent) {
+  // Role-Based Access Control: User Role is strictly restricted to Support Email Management
+  if (authStore.isEmailUserOnly) {
+    if (to.name === "SupportEmails") {
+      return next();
+    }
+    // Block unauthorized access and redirect to Support Email Management
+    toast.error(
+      __("Access Denied: Your account role is restricted to Support Email Management only.")
+    );
+    return next({ name: "SupportEmails" });
+  }
+
+  if (to.name === "TicketAgent" && !authStore.isAgent) {
     const ticketId = to.params.ticketId;
     next({
       name: "TicketCustomer",
@@ -265,7 +298,8 @@ router.beforeEach(async (to, _, next) => {
 });
 
 router.afterEach(async (to) => {
-  if (to.meta.public) return;
+  // the user list is agent-only, and the support email page doesn't need it
+  if (to.meta.public || useAuthStore().isEmailUserOnly) return;
   const { users } = useUserStore();
   if (!users?.fetched) {
     await users.fetch();

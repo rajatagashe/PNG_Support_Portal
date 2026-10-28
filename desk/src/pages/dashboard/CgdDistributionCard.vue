@@ -32,34 +32,34 @@
     <!-- Content -->
     <div v-else class="space-y-4 pt-3">
       <!-- High-level KPI summary -->
-      <div class="grid grid-cols-3 gap-3 bg-surface-gray-1 p-3 rounded-md">
-        <div>
-          <span class="text-xs text-ink-gray-6">{{ __("Active CGD Tickets") }}</span>
+      <div class="grid grid-cols-3 gap-3">
+        <div class="p-3 rounded-xl bg-surface-white border border-outline-gray-2 border-t-3 border-t-blue-500 shadow-2xs">
+          <span class="text-xs font-medium text-ink-gray-6">{{ __("Active CGD Tickets") }}</span>
           <div class="text-2xl font-bold text-ink-gray-9 mt-0.5">
             {{ cgdResource.data.total_active_cgd_tickets || 0 }}
           </div>
         </div>
-        <div>
-          <span class="text-xs text-ink-gray-6">{{ __("Urgent / Escalated") }}</span>
+        <div class="p-3 rounded-xl bg-surface-white border border-outline-gray-2 border-t-3 border-t-amber-500 shadow-2xs">
+          <span class="text-xs font-medium text-ink-gray-6">{{ __("Urgent / Escalated") }}</span>
           <div class="flex items-center gap-1.5 mt-0.5">
             <span class="text-2xl font-bold text-ink-gray-9">
               {{ cgdResource.data.total_urgent_tickets || 0 }}
             </span>
             <LucideFlame
               v-if="cgdResource.data.total_urgent_tickets > 0"
-              class="size-4 text-ink-gray-7"
+              class="size-4 text-amber-500"
             />
           </div>
         </div>
-        <div>
-          <span class="text-xs text-ink-gray-6">{{ __("SLA Risk (<24h)") }}</span>
+        <div class="p-3 rounded-xl bg-surface-white border border-outline-gray-2 border-t-3 border-t-rose-500 shadow-2xs">
+          <span class="text-xs font-medium text-ink-gray-6">{{ __("SLA Risk (<24h)") }}</span>
           <div class="flex items-center gap-1.5 mt-0.5">
             <span class="text-2xl font-bold text-ink-gray-9">
               {{ cgdResource.data.total_sla_risk || 0 }}
             </span>
             <LucideAlertTriangle
               v-if="cgdResource.data.total_sla_risk > 0"
-              class="size-4 text-ink-gray-7"
+              class="size-4 text-rose-500"
             />
           </div>
         </div>
@@ -75,20 +75,20 @@
           <div
             v-for="item in cgdResource.data.entities"
             :key="item.customer"
-            class="flex items-center justify-between p-2 rounded hover:bg-surface-gray-1 transition-colors text-sm"
+            class="flex items-center justify-between p-2.5 rounded-lg border border-outline-gray-1 bg-surface-gray-1/40 hover:bg-surface-gray-1 transition-colors text-sm"
           >
             <div class="flex items-center gap-2 truncate">
               <LucideCrown
                 v-if="item.is_vip"
-                class="size-3.5 text-ink-gray-9 shrink-0"
+                class="size-4 text-amber-500 shrink-0"
                 title="VIP CGD Entity"
               />
-              <span class="font-medium text-ink-gray-9 truncate">
+              <span class="font-semibold text-ink-gray-9 truncate">
                 {{ item.customer_name }}
               </span>
               <span
                 v-if="item.is_vip"
-                class="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-surface-gray-3 text-ink-gray-9 shrink-0"
+                class="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-300 shrink-0"
               >
                 VIP
               </span>
@@ -101,18 +101,18 @@
               <!-- Risk count -->
               <span
                 v-if="item.sla_risk_count > 0"
-                class="px-1.5 py-0.5 rounded bg-surface-gray-2 text-ink-gray-8 font-medium"
+                class="px-2 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200 font-semibold"
                 title="Tickets at risk of SLA breach within 24h"
               >
                 {{ item.sla_risk_count }} {{ __("at risk") }}
               </span>
               <!-- SLA compliance pill -->
               <span
-                class="px-2 py-0.5 rounded font-bold"
+                class="px-2.5 py-0.5 rounded-full font-bold border"
                 :class="
                   item.sla_compliance_rate >= 90
-                    ? 'bg-surface-gray-2 text-ink-gray-9'
-                    : 'bg-surface-gray-3 text-ink-gray-8'
+                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                    : 'bg-amber-50 text-amber-700 border-amber-200'
                 "
               >
                 {{ item.sla_compliance_rate?.toFixed(0) }}%

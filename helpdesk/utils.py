@@ -34,13 +34,51 @@ def check_permissions(doctype, parent, doc=None):
 
 def is_admin(user: str = None) -> bool:
     """
-    Check whether `user` is an admin
+    Check whether `user` is an admin (System Manager or Administrator).
 
     :param user: User to check against, defaults to current user
     :return: Whether `user` is an admin
     """
     user = user or frappe.session.user
-    return user == "Administrator"
+    if user == "Administrator":
+        return True
+    roles = set(frappe.get_roles(user))
+    return bool(roles & {"Administrator", "System Manager"})
+
+
+SUPPORT_EMAIL_ROLE = "HD Support Email User"
+
+
+def is_support_email_only(user: str | None = None) -> bool:
+    """
+    Check whether `user` is restricted to Support Email Management only.
+
+    :param user: User to check against, defaults to current user
+    :return: Whether `user` has the support email role and no agent or admin access
+    """
+    user = user or frappe.session.user
+    if not user or user == "Guest":
+        return False
+    if SUPPORT_EMAIL_ROLE not in frappe.get_roles(user):
+        return False
+    return not is_agent(user)
+
+
+def admin_only(fn):
+    """Decorator to enforce Admin Role (System Manager or Administrator) on backend API endpoints."""
+
+    @functools.wraps(fn)
+    def wrapper(*args, **kwargs):
+        if not is_admin():
+            frappe.throw(
+                msg=_("Access Denied: Administrator role is required to access this resource."),
+                title=_("Admin Access Required"),
+                exc=frappe.PermissionError,
+            )
+
+        return fn(*args, **kwargs)
+
+    return wrapper
 
 
 def is_agent(user: str | None = None) -> bool:
@@ -184,6 +222,23 @@ def agent_only(fn):
     @functools.wraps(fn)
     def wrapper(*args, **kwargs):
         if not is_agent():
+            frappe.throw(
+                msg=_("You are not permitted to access this resource."),
+                title=_("Not Allowed"),
+                exc=frappe.PermissionError,
+            )
+
+        return fn(*args, **kwargs)
+
+    return wrapper
+
+
+def agent_or_email_user_only(fn):
+    """Decorator to allow agents and Support Email Management users."""
+
+    @functools.wraps(fn)
+    def wrapper(*args, **kwargs):
+        if not (is_agent() or is_support_email_only()):
             frappe.throw(
                 msg=_("You are not permitted to access this resource."),
                 title=_("Not Allowed"),

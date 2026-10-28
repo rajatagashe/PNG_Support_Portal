@@ -21,14 +21,14 @@
           </h2>
           <span
             v-if="portalStore.isVip"
-            class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold bg-surface-gray-3 text-ink-gray-9 border border-outline-gray-3"
+            class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-300 shadow-2xs"
           >
-            <LucideCrown class="size-3 text-ink-gray-8" />
+            <LucideCrown class="size-3.5 text-amber-600" />
             {{ __("VIP Priority CGD") }}
           </span>
           <span
             v-else-if="portalStore.customerName"
-            class="inline-flex items-center px-1.5 py-0.5 rounded text-xs bg-surface-gray-2 text-ink-gray-7"
+            class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-primary border border-blue-200"
           >
             {{ portalStore.customerName }}
           </span>

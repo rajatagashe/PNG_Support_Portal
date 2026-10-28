@@ -39,12 +39,16 @@ scheduler_events = {
         "helpdesk.search.download_corpus",
     ],
     "cron": {
-        "*/10 * * * *": [
+        # every minute, so support mail shows up with little delay
+        "* * * * *": [
             "helpdesk.api.email_management.scheduled_sync_support_emails",
         ],
     },
     "daily": [
         "helpdesk.helpdesk.doctype.hd_ticket.hd_ticket.close_tickets_after_n_days"
+    ],
+    "hourly": [
+        "helpdesk.automation.automation_engine.execute_automations",
     ],
     "hourly_long": [
         "helpdesk.helpdesk.doctype.hd_ticket.hd_ticket.update_sla_status_in_ticket"
@@ -111,6 +115,9 @@ doc_events = {
         "validate": "helpdesk.extends.comment.validate",
         "on_trash": "helpdesk.extends.comment.on_trash",
     },
+    "Communication": {
+        "after_insert": "helpdesk.extends.communication.after_insert",
+    },
 }
 
 # For List View
@@ -167,10 +174,4 @@ setup_wizard_complete = "helpdesk.setup.setup_wizard.setup_complete"
 
 before_tests = "helpdesk.test_utils.before_tests"
 auth_hooks = ["helpdesk.auth.authenticate"]
-
-scheduler_events = {
-    "hourly": [
-        "helpdesk.automation.automation_engine.execute_automations",
-    ]
-}
 

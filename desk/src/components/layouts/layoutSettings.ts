@@ -3,6 +3,7 @@ import LucideBookOpen from "~icons/lucide/book-open";
 import LucideUsers from "~icons/lucide/users";
 import LucideTicket from "~icons/lucide/ticket";
 import LucideLayoutDashboard from "~icons/lucide/layout-dashboard";
+import LucideMail from "~icons/lucide/mail";
 import { OrganizationsIcon } from "../icons";
 import PhoneIcon from "../icons/PhoneIcon.vue";
 import LucideHome from "~icons/lucide/home";
@@ -14,6 +15,14 @@ import { __ } from "@/translation";
  */
 export const showShortcutsModal = ref(false);
 
+export const supportEmailUserSidebarOptions = [
+  {
+    label: __("Support Emails"),
+    icon: LucideMail,
+    to: "SupportEmails",
+  },
+];
+
 export const agentPortalSidebarOptions = [
   {
     label: __("Home"),
@@ -24,6 +33,11 @@ export const agentPortalSidebarOptions = [
     label: __("Dashboard"),
     icon: LucideLayoutDashboard,
     to: "Dashboard"
+  },
+  {
+    label: __("Support Emails"),
+    icon: LucideMail,
+    to: "SupportEmails",
   },
   {
     label: __("Tickets"),

@@ -116,6 +116,7 @@ import UserMenu from "@/components/UserMenu.vue";
 import ViewModal from "@/components/ViewModal.vue";
 import { useDevice } from "@/composables";
 import { currentView, useView } from "@/composables/useView";
+import { useAuthStore } from "@/stores/auth";
 import { useNotificationStore } from "@/stores/notification";
 import { useSidebarStore } from "@/stores/sidebar";
 import { useTelephonyStore } from "@/stores/telephony";
@@ -140,6 +141,7 @@ import LucideSearch from "~icons/lucide/search";
 import {
   agentPortalSidebarOptions,
   customerPortalSidebarOptions,
+  supportEmailUserSidebarOptions,
 } from "./layoutSettings";
 
 const props = defineProps<{
@@ -197,10 +199,16 @@ function selectItem(key: string, to: RouteLocationRaw, onSelect?: () => void) {
   router.push(to);
 }
 
+const authStore = useAuthStore();
+
 const navItems = computed(() => {
-  const options = isCustomerPortal.value
-    ? customerPortalSidebarOptions
-    : agentPortalSidebarOptions;
+  let options = agentPortalSidebarOptions;
+  if (isCustomerPortal.value) {
+    options = customerPortalSidebarOptions;
+  } else if (authStore.isEmailUserOnly) {
+    // Restricted User Role: Only Support Email Management
+    options = supportEmailUserSidebarOptions;
+  }
   return options
     .filter((item) => isCallingEnabled.value || item.label !== __("Call Logs"))
     .map((option, index) => ({
@@ -247,6 +255,10 @@ const notificationItem = computed(() =>
 
 const mainItems = computed(() => {
   if (isCustomerPortal.value) return navItems.value;
+  if (authStore.isEmailUserOnly) {
+    // For User role, don't expose system search across tickets/customers/KB
+    return [...navItems.value];
+  }
   const top = props.mobile
     ? [notificationItem.value]
     : [searchItem.value, notificationItem.value];
@@ -255,6 +267,10 @@ const mainItems = computed(() => {
 
 const sections = computed(() => {
   const result = [{ label: "", items: mainItems.value, collapsible: false }];
+  if (authStore.isEmailUserOnly) {
+    // Do not show Ticket Views to Support Email User
+    return result;
+  }
   if (publicViews.value?.length && !isCustomerPortal.value) {
     result.push({
       label: __("Public Views"),

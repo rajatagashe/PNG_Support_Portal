@@ -380,13 +380,13 @@ class TestCommentTrustBoundary(CoreCommentsTestCase):
         frappe.set_user(AGENT_ONE)
         self.assertTrue(realtime.has_permission("HD Ticket", ticket.name))
 
-    def test_system_manager_is_denied_like_core(self):
-        """Non-agent System Managers have no doc-level HD Ticket access
-        (permission hook), so the room gate matches core and denies too."""
+    def test_system_manager_is_admin_like_core(self):
+        """System Managers are admins (RBAC), so they read every ticket
+        and the room gate matches core and lets them in."""
         ticket = make_ticket(raised_by=CUSTOMER)
         frappe.set_user(self.SYSTEM_MANAGER)
-        self.assertFalse(frappe.has_permission("HD Ticket", doc=ticket.name))
-        self.assertFalse(realtime.has_permission("HD Ticket", ticket.name))
+        self.assertTrue(frappe.has_permission("HD Ticket", doc=ticket.name))
+        self.assertTrue(realtime.has_permission("HD Ticket", ticket.name))
 
     def test_team_restricted_agent_is_still_denied(self):
         """Agents delegate to core, so team restrictions keep applying."""

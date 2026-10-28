@@ -326,18 +326,10 @@ async function exportCSV() {
         res.filename || `helpdesk_${filters.group_by}_report.csv`,
         "text/csv;charset=utf-8;"
       );
-      toast({
-        title: __("Downloaded"),
-        text: __("CSV report downloaded successfully"),
-        icon: "check",
-      });
+      toast.success(__("CSV report downloaded successfully"));
     }
   } catch (error: any) {
-    toast({
-      title: __("Error"),
-      text: error.message || __("Failed to export CSV"),
-      icon: "alert-circle",
-    });
+    toast.error(error.message || __("Failed to export CSV"));
   } finally {
     isExportingCsv.value = false;
   }
@@ -362,18 +354,10 @@ async function exportJSON() {
         res.filename || `helpdesk_${filters.group_by}_report.json`,
         "application/json;charset=utf-8;"
       );
-      toast({
-        title: __("Downloaded"),
-        text: __("JSON report downloaded successfully"),
-        icon: "check",
-      });
+      toast.success(__("JSON report downloaded successfully"));
     }
   } catch (error: any) {
-    toast({
-      title: __("Error"),
-      text: error.message || __("Failed to export JSON"),
-      icon: "alert-circle",
-    });
+    toast.error(error.message || __("Failed to export JSON"));
   } finally {
     isExportingJson.value = false;
   }
@@ -404,18 +388,10 @@ async function exportHTML() {
           "text/html;charset=utf-8;"
         );
       }
-      toast({
-        title: __("Report Ready"),
-        text: __("Executive report opened for printing"),
-        icon: "check",
-      });
+      toast.success(__("Executive report opened for printing"));
     }
   } catch (error: any) {
-    toast({
-      title: __("Error"),
-      text: error.message || __("Failed to open report"),
-      icon: "alert-circle",
-    });
+    toast.error(error.message || __("Failed to open report"));
   } finally {
     isExportingHtml.value = false;
   }
@@ -430,17 +406,9 @@ async function emailDigest() {
   isSendingDigest.value = true;
   try {
     await digestResource.submit();
-    toast({
-      title: __("Email Sent"),
-      text: __("Support analytics digest dispatched to your inbox"),
-      icon: "check",
-    });
+    toast.success(__("Support analytics digest dispatched to your inbox"));
   } catch (error: any) {
-    toast({
-      title: __("Error"),
-      text: error.message || __("Failed to send email digest"),
-      icon: "alert-circle",
-    });
+    toast.error(error.message || __("Failed to send email digest"));
   } finally {
     isSendingDigest.value = false;
   }

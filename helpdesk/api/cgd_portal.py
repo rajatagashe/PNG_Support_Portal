@@ -387,6 +387,24 @@ def get_cgd_dashboard_analytics(
             contact = frappe.db.get_value("Contact", {"user": user}, "name")
             tickets_cgd = frappe.db.get_value("HD Ticket", {"contact": contact}, "customer")
             user_cgd = tickets_cgd
+        if not user_cgd:
+            return {
+                "summary": {
+                    "total": 0,
+                    "open": 0,
+                    "resolved": 0,
+                    "pending": 0,
+                    "escalated": 0,
+                    "first_contact_resolution_rate": 0,
+                    "avg_resolution_hours": 0,
+                    "sla_compliance_rate": 100,
+                },
+                "status_distribution": [],
+                "priority_distribution": [],
+                "escalation_distribution": [],
+                "time_series": [],
+                "period_label": "",
+            }
         cgd = user_cgd
 
     # Compute date ranges
@@ -517,6 +535,14 @@ def export_cgd_report_xlsx(
     user = frappe.session.user
     if not (is_agent(user) or user == "Administrator"):
         user_cgd = get_user_customer(user)
+        if not user_cgd:
+            contact = frappe.db.get_value("Contact", {"user": user}, "name")
+            user_cgd = frappe.db.get_value("HD Ticket", {"contact": contact}, "customer")
+        if not user_cgd:
+            frappe.throw(
+                msg=_("Access Denied: Your account is not associated with any active CGD organization."),
+                exc=frappe.PermissionError,
+            )
         cgd = user_cgd
 
     conditions = ["1=1"]

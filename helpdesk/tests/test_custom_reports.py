@@ -49,10 +49,10 @@ class TestCustomReports(FrappeTestCase):
         self.assertIn("breakdown", report)
 
     def test_export_report_csv(self):
-        csv_data = export_report_csv(group_by="customer", customer=self.customer.name)
-        self.assertIn("Customer,Total Tickets,Open Tickets", csv_data)
-        self.assertIn(self.customer.name, csv_data)
-        self.assertIn("filename", csv_data)
+        csv_res = export_report_csv(group_by="customer", customer=self.customer.name)
+        self.assertIn("Customer,Total Tickets,Open Tickets", csv_res["csv_content"])
+        self.assertIn(self.customer.name, csv_res["csv_content"])
+        self.assertIn("filename", csv_res)
 
     def test_export_report_json(self):
         json_res = export_report_json(group_by="customer", customer=self.customer.name)

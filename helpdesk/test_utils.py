@@ -25,7 +25,8 @@ from helpdesk.api.dashboard import HelpdeskDashboard
 from helpdesk.api.settings.field_dependency import create_update_field_dependency
 from helpdesk.consts import DEFAULT_SLA, DEFAULT_TICKET_TEMPLATE
 from helpdesk.integrations.erpnext.utils import create_customer_field
-from helpdesk.utils import get_customers, is_frappe_version
+from helpdesk.setup.install import setup_support_email_role
+from helpdesk.utils import SUPPORT_EMAIL_ROLE, get_customers, is_frappe_version
 
 if is_frappe_version("16", above=True):
     from frappe.tests.utils import make_test_objects
@@ -1311,6 +1312,12 @@ def make_user(email: str, roles: list[str] | None = None) -> str:
     return user.name
 
 
+def make_support_email_user(email: str) -> str:
+    """Create a User restricted to Support Email Management (no agent roles)."""
+    setup_support_email_role()
+    return make_user(email, [SUPPORT_EMAIL_ROLE])
+
+
 def make_granular_agent(email: str, role: str) -> str:
     """Create or update an agent with a specific granular role."""
     ensure_granular_roles_exist()
@@ -1487,3 +1494,100 @@ def make_ticket_attachment(ticket_id: str, file_name: str = "diagnostic.log", co
     })
     return file_doc.insert(ignore_permissions=True)
 
+
+
+def make_support_mailbox(name: str, **overrides: Any) -> Any:
+    """An incoming Email Account that creates HD Tickets. Tests skip the login check."""
+    if frappe.db.exists("Email Account", name):
+        return frappe.get_doc("Email Account", name)
+    account = frappe.get_doc(
+        {
+            "doctype": "Email Account",
+            "email_account_name": name,
+            "email_id": f"{frappe.scrub(name)}@support.test",
+            "email_server": "imap.support.test",
+            "use_imap": 1,
+            "enable_incoming": 1,
+            "append_to": "HD Ticket",
+            "imap_folder": [{"folder_name": "INBOX", "append_to": "HD Ticket"}],
+            **overrides,
+        }
+    )
+    return account.insert(ignore_permissions=True)
+
+
+def make_connected_app(provider_name: str) -> Any:
+    """An OAuth Connected App with no tokens, like one waiting for its first sign-in."""
+    return frappe.get_doc(
+        {
+            "doctype": "Connected App",
+            "provider_name": provider_name,
+            "client_id": "test-client-id",
+            "client_secret": "test-client-secret",
+            "authorization_uri": "https://login.example.test/authorize",
+            "token_uri": "https://login.example.test/token",
+        }
+    ).insert(ignore_permissions=True)
+
+
+def clear_mailbox_sync_status(account: str):
+    from helpdesk.overrides.email_account import MAILBOX_STATUS_CACHE_KEY
+
+    frappe.cache.hdel(MAILBOX_STATUS_CACHE_KEY, account)
+
+
+def make_support_email(
+    ticket: str,
+    content: str = "Gas meter reading looks wrong.",
+    sender: str = "customer@cgd.test",
+    sent_or_received: str = "Received",
+    **values: Any,
+) -> Any:
+    """An email Communication on a ticket, unread unless `seen` is passed."""
+    return frappe.get_doc(
+        {
+            "doctype": "Communication",
+            "communication_type": "Communication",
+            "communication_medium": "Email",
+            "sent_or_received": sent_or_received,
+            "subject": "Support email",
+            "sender": sender,
+            "sender_full_name": "Asha Customer",
+            "recipients": "support@support.test",
+            "content": content,
+            "reference_doctype": "HD Ticket",
+            "reference_name": ticket,
+            "seen": 0,
+            **values,
+        }
+    ).insert(ignore_permissions=True)
+
+
+def make_email_attachment(
+    doctype: str, name: str, file_name: str = "meter-photo.txt", content: str = "reading: 0042"
+) -> Any:
+    """A private File attached to any document, e.g. a support email Communication."""
+    return frappe.get_doc(
+        {
+            "doctype": "File",
+            "file_name": file_name,
+            "attached_to_doctype": doctype,
+            "attached_to_name": name,
+            "content": content,
+            "is_private": 1,
+        }
+    ).insert(ignore_permissions=True)
+
+
+def make_raw_support_email(message_id: str, sender: str, subject: str, body: str = "Hello") -> str:
+    """A raw RFC 822 email, as an IMAP server would return it."""
+    return (
+        f"From: Test Sender <{sender}>\r\n"
+        "To: support@support.test\r\n"
+        f"Subject: {subject}\r\n"
+        f"Message-ID: <{message_id}>\r\n"
+        "Date: Tue, 27 Oct 2026 10:00:00 +0530\r\n"
+        "Content-Type: text/plain; charset=utf-8\r\n"
+        "\r\n"
+        f"{body}\r\n"
+    )

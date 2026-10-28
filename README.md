@@ -24,7 +24,14 @@ The platform consolidates Zendesk-class ticketing workflows with dedicated multi
 - [Native Bench Setup (Alternative)](#native-bench-setup-alternative)
 - [Common Operations & Bench Commands](#common-operations--bench-commands)
 - [Project Structure](#project-structure)
-- [Role-Based Access Control (RBAC)](#role-based-access-control-rbac)
+- [Support Mailbox Integration (Microsoft 365)](#support-mailbox-integration-microsoft-365)
+- [Role-Based Access Control (RBAC) Architecture](#role-based-access-control-rbac-architecture)
+  - [1. Admin Role vs. User Role](#1-admin-role-vs-user-role)
+  - [2. Module Access Matrix](#2-module-access-matrix)
+  - [3. Dedicated Login Flow & Post-Login Redirection](#3-dedicated-login-flow--post-login-redirection)
+  - [4. Direct URL Protection (Frontend Guard)](#4-direct-url-protection-frontend-guard)
+  - [5. Backend API Enforcement & DocType Filtering](#5-backend-api-enforcement--doctype-filtering)
+  - [6. Provisioning & Testing RBAC](#6-provisioning--testing-rbac)
 - [Troubleshooting & FAQs](#troubleshooting--faqs)
 
 ---
@@ -156,13 +163,20 @@ Once the containers are up, the portal is ready to use:
 
 | Interface | URL | Description |
 | :--- | :--- | :--- |
-| **Helpdesk Single Page App** | [http://localhost:8000/helpdesk](http://localhost:8000/helpdesk) | Main agent workspace, customer portal & knowledge base |
+| **PNG Support Desk (Portal)** | [http://localhost:8000/helpdesk](http://localhost:8000/helpdesk) | Main SPA (auto-redirects based on logged-in role) |
+| **Dedicated Portal Login** | [http://localhost:8000/helpdesk/login](http://localhost:8000/helpdesk/login) | Role-aware login with one-click credential switcher |
 | **Frappe Desk / Admin Login** | [http://localhost:8000/login](http://localhost:8000/login) | Standard Frappe administrative interface |
 | **Realtime Service** | `ws://localhost:9000` | Live ticket updates, typing presence, collision locks |
 
-#### Default Administrator Credentials
-- **Username**: `Administrator`
-- **Password**: `admin`
+#### Role Access & Environment Secrets
+
+Credentials are securely managed through environment variables (`.env`) and must never be committed to Git. See `.env.example` to set local secrets.
+
+| Role | Username / Identity | Credential Source | Access Scope |
+| :--- | :--- | :--- | :--- |
+| **Admin** | `Administrator` | `ADMIN_PASSWORD` in `.env` | **Full Access** to all modules, settings, reports, agents, and configuration. |
+| **User** | `support.png@amantyatech.com` | `SUPPORT_USER_PASSWORD` in `.env` | **Support Email Management ONLY** (`/support-emails`). All other modules are strictly blocked. |
+| *(Legacy)* | `user@example.com` | `SUPPORT_USER_PASSWORD` in `.env` | Secondary support email operator account. |
 
 ---
 
@@ -310,19 +324,214 @@ PNG_Support_Portal/
 
 ---
 
-## Role-Based Access Control (RBAC)
+## Support Mailbox Integration (Microsoft 365)
 
-The portal implements granular role separation tailored to enterprise support organizations and CGD tenants:
+The support mailbox `support.png@amantyatech.com` is hosted on **Microsoft 365 (Exchange Online)** (MX `amantyatech-com.mail.protection.outlook.com`). Exchange Online rejects username/password (Basic auth) logins for IMAP and SMTP, and app passwords don't work for them either. So the portal connects with **OAuth 2.0 (XOAUTH2)** through an Entra ID app registration, using Frappe's built-in `Connected App` + `Email Account (auth_method = OAuth)`.
 
-| Role | Target Persona | Permissions & Scope |
-| :--- | :--- | :--- |
-| **Administrator / System Manager** | System Administrators | Unrestricted system configuration, DocType schemas, and global settings. |
-| **HD Team Lead / Manager** | Support Team Leads | Queue monitoring, unassigned triage, skill/capacity assignments, and analytics. |
-| **HD Tier 1 Agent** | Front-line Support | Inbound intake, basic ticket responses, public comments, and self-assignment. |
-| **HD Tier 2 Agent** | Senior Technical Support | Complex ticket resolution, side conversations, and problem-incident linking. |
-| **HD Auditor** | Compliance & Quality Assurance | Read-only audit access across all tickets, CSAT logs, and SLA metrics. |
-| **HD Customer Manager** | CGD Entity Coordinators | View all tickets raised by members of their CGD entity, submit queries, and view SLA reports. |
-| **HD Customer** | End Customer / Entity Staff | View and reply only to their own raised tickets on the self-service portal. |
+The default is **app-only access** (`MS365_AUTH_MODE=app`): the portal logs in to the mailbox as the Entra app itself, so no person ever signs in and nothing depends on one user's session. Frappe asks Microsoft for a fresh token whenever it needs one (`Email Account.backend_app_flow`), so the connection survives logouts and server restarts. The client secret is stored encrypted (Connected App, site `encryption_key`). No mailbox password is stored anywhere.
+
+### 1. One-time Microsoft 365 setup — needs a Microsoft 365 admin
+
+1. **Entra admin center → App registrations → your app → API permissions → + Add a permission → APIs my organization uses →** search **Office 365 Exchange Online** **→ Application permissions →** tick `IMAP.AccessAsApp` and `SMTP.SendAsApp` → **Add permissions** → **Grant admin consent**.
+2. **Entra admin center → Enterprise applications →** open the same app → copy its **Object ID**. This is the enterprise application's ID, not the app registration's.
+3. In **Exchange Online PowerShell** (`Install-Module ExchangeOnlineManagement`, then `Connect-ExchangeOnline`):
+   ```powershell
+   New-ServicePrincipal -AppId <Application (client) ID> -ObjectId <Enterprise app Object ID>
+   Add-MailboxPermission -Identity "support.png@amantyatech.com" -User <Enterprise app Object ID> -AccessRights FullAccess
+   Add-RecipientPermission -Identity "support.png@amantyatech.com" -Trustee <Enterprise app Object ID> -AccessRights SendAs -Confirm:$false
+   ```
+   This limits the app to this one mailbox.
+4. **Microsoft 365 admin center → Users → support.png@amantyatech.com → Mail → Manage email apps**: keep **IMAP** on and turn **Authenticated SMTP** on.
+
+### 2. Provision the Connected App and mailbox
+
+Put `MS365_TENANT_ID`, `MS365_CLIENT_ID` and `MS365_CLIENT_SECRET` (the secret's **Value**, not its ID) in your local `.env`, never in `.env.example`. Then run:
+
+```bash
+# from the repo root, in Git Bash
+set -a; . ./.env; set +a
+docker exec -e MS365_TENANT_ID -e MS365_CLIENT_ID -e MS365_CLIENT_SECRET docker-frappe-1 bash -c "cd frappe-bench && bench --site helpdesk.localhost execute helpdesk.setup.setup_rbac.execute"
+```
+
+The script creates the `Microsoft 365 Support Mailbox` Connected App (scope `https://outlook.office365.com/.default`) and the `PNG Support Desk` Email Account (OAuth app-only, IMAP INBOX → HD Ticket), switched off. Re-running it, for example to rotate the secret, keeps an already connected mailbox on.
+
+### 3. Activate
+
+Log in as **Admin**, open **Support Emails**, and click **Activate** on the *Support Mailbox Connection* card. Frappe logs in over IMAP and SMTP once to prove the grants work, switches the mailbox on and runs the first sync. If Microsoft refuses the login, the card shows *"Microsoft rejected the app's access to the mailbox"* with a **Retry** button; finish step 1 and retry.
+
+**Delegated sign-in instead:** set `MS365_AUTH_MODE=delegated`, add the delegated `IMAP.AccessAsUser.All`, `SMTP.Send` and `offline_access` permissions plus the redirect URI the script prints (a **Web** platform; Microsoft only accepts `https://` or `http://localhost`, so set `host_name`). Then click **Connect** and sign in once as the mailbox. This needs admin consent too, if your tenant blocks user consent.
+
+### How sync works
+
+| Piece | Behaviour |
+| :--- | :--- |
+| **Polling** | `scheduled_sync_support_emails` runs every minute (`* * * * *`) and pulls each support mailbox (Email Accounts whose IMAP folder or `append_to` is HD Ticket). Needs the scheduler on (`bench --site <site> enable-scheduler`) and `bench migrate` after updating, so the job is registered. |
+| **Live updates** | Each received email publishes `helpdesk:support-email-received` (no email data in the event); open Support Email pages reload the list. New tickets still publish `helpdesk:new-ticket`. |
+| **Duplicates** | Frappe skips mail whose `Message-ID` is already stored. A per-mailbox file lock stops the minute cron, Frappe's own 10-minute pull and **Sync now** from fetching the same mail at the same time. |
+| **Errors** | Each pull records the mailbox state (`connected` / `error`) with an error kind: `app_access_denied`, `authorization_required`, `authentication_failed`, `connection_failed`, `processing_failed` or `sync_failed`. The page shows a plain message, never the raw error. Tracebacks go to the Error Log, where Frappe masks variables named like password, token, secret or key. |
+| **Reconnection** | A failing mailbox is retried every 5 minutes instead of every minute. App-only mailboxes get a fresh token automatically; a delegated mailbox with an expired or revoked sign-in shows **Reconnect** to admins. |
+| **Bounces / auto-replies** | Parked as Unhandled Email, as before. |
+
+### What Support Emails shows
+
+- List: sender name and address, subject, CGD, team, assignee, received time, status, **unread** marker and **attachment** icon. Filters by CGD, team, status and **read state**; search covers subject, sender, ticket ID and **message text**.
+- **View** opens the full thread: sender, To/Cc, date and time, sanitized message body, attachments (downloaded through `support_mailbox.download_support_email_attachment`, which only serves files on support emails or their tickets), **Mark as read / unread**, and **Reply** (plain text, sent from the support mailbox and logged on the ticket).
+- Opening an email marks it read. Agents can still open the full ticket; Support Email Users stay on this page.
+
+---
+
+## Role-Based Access Control (RBAC) Architecture
+
+PNG Support Desk implements strict end-to-end Role-Based Access Control (RBAC) designed around two primary operational personas: **Admin** and **User (Support Email User)**. Security is enforced at both the client-side router and the server-side API layers, ensuring complete isolation without breaking existing desk features.
+
+---
+
+### 1. Admin Role vs. User Role
+
+#### **Admin Role**
+- **Target Persona**: System Administrators, Helpdesk Operations Managers, CGD Superusers (`Administrator`).
+- **Access Level**: **Unrestricted (Full Access)** across all portal modules and data.
+- **Key Capabilities**:
+  - Full visibility and CRUD access to all tickets, customer organizations, contacts, and knowledge base articles.
+  - Complete access to executive custom reporting (CSV, XLSX, JSON exports) and CGD entity breakdown metrics.
+  - Administration of SLA service levels, holiday schedules, agent queues, skill assignments, and automation triggers.
+  - System configuration, DocType schema management, user management, and telephony settings.
+
+#### **User Role (`HD Support Email User`)**
+- **Target Persona**: Dedicated Email Operations Staff, Email Triage Personnel (`support.png@amantyatech.com`).
+- **Access Level**: **Restricted strictly to the Support Email Management module (`/support-emails`)**.
+- **Key Capabilities**:
+  - View, search, and filter inbound and outbound support communications and email chains.
+  - Access email analytics dashboards (daily, weekly, monthly distribution, CGD entity breakdown, and timeline trends).
+  - Inspect email message headers, sender verification status, and linked ticket associations.
+  - Trigger an on-demand mailbox sync and export the email report (XLSX / CSV).
+  - Open the full email thread with attachments, mark emails read/unread, and reply to the sender from the support mailbox.
+- **Restrictions (Strictly Enforced)**:
+  - **No Access** to Ticket Workspace (`/tickets`), Ticket Details (`/tickets/:id`), or Custom Views.
+  - **No Access** to Operational Dashboard (`/home`, `/analytics`), Call Logs (`/call-logs`), or Knowledge Base (`/articles`).
+  - **No Access** to Customers (`/customers`), Contacts (`/contacts`), or Settings (`/settings/*`).
+  - **No Access** to Administrative Reports (`/custom-reports`) or backend export endpoints.
+  - **No Reassign**: assigning tickets stays with agents, so the Reassign button is hidden.
+  - Administrative menus, quick action buttons, ticket view sidebars, and global search shortcuts are hidden from the UI.
+- **Not an agent**: `is_agent()` is false for this role, so every `@agent_only` endpoint returns HTTP 403. A user who also holds `Agent` or an active `HD Agent` record is treated as a normal agent.
+
+---
+
+### 2. Module Access Matrix
+
+| Module / Feature | Admin Role | User Role (`HD Support Email User`) | Security Enforcement Mechanism |
+| :--- | :---: | :---: | :--- |
+| **Support Email Management (`/support-emails`)** | ✅ Full Access | ✅ Full Access | `@agent_or_email_user_only` on the email list, sync and export endpoints |
+| **Email Analytics Dashboard & Charts** | ✅ Full Access | ✅ Full Access | `@agent_or_email_user_only` on `get_email_dashboard_analytics` |
+| **Email Detail, Read/Unread & Reply** | ✅ Full Access | ✅ Full Access | `support_mailbox` endpoints with `@agent_or_email_user_only`; agents keep their ticket permissions |
+| **Email Reassignment & Assignment History** | ✅ Full Access | ❌ Blocked (403) | `@agent_only` + Reassign button hidden |
+| **Ticket Workspace (`/tickets`)** | ✅ Full Access | ❌ Blocked (403) | Vue Router Guard + `@agent_only` APIs + HD Ticket permission hooks |
+| **Ticket Details & Editing (`/tickets/:id`)** | ✅ Full Access | ❌ Blocked (403) | Vue Router Guard + HD Ticket `has_permission` |
+| **Executive Reports & Exports (`/custom-reports`)** | ✅ Full Access | ❌ Blocked (403) | Backend `@admin_only` decorator |
+| **Agent Performance & Workload** | ✅ Full Access | ❌ Blocked (403) | `doc.get_list_data` rejects every DocType for this role |
+| **Customer & Contact Management** | ✅ Full Access | ❌ Blocked (CGD names read-only) | Vue Router Guard; HD Customer readable for the CGD filter only |
+| **Knowledge Base Articles (`/articles`)** | ✅ Full Access | ❌ Blocked | Vue Router Guard + Navigation suppressed |
+| **Call Logs & Telephony (`/call-logs`)** | ✅ Full Access | ❌ Blocked | Vue Router Guard + Navigation suppressed |
+| **System Settings & Triggers (`/settings/*`)** | ✅ Full Access | ❌ Blocked (403) | Backend `@admin_only` + UI suppressed |
+| **User & Role Management** | ✅ Full Access | ❌ Blocked (403) | Frappe System Manager permissions |
+
+---
+
+### 3. Dedicated Login Flow & Post-Login Redirection
+
+The portal features a dedicated, role-aware authentication page at `http://localhost:8000/helpdesk/login` (accessible also via `/login` within the SPA).
+
+```
+                      ┌──────────────────────────────────────────┐
+                      │    Portal Login (/helpdesk/login)        │
+                      │  - Quick Switcher: Admin / User Demo     │
+                      │  - Form: usr + pwd                       │
+                      └────────────────────┬─────────────────────┘
+                                           │ POST /api/method/login
+                                           ▼
+                      ┌──────────────────────────────────────────┐
+                      │    helpdesk.api.auth.get_user            │
+                      │  Returns: role_type, is_admin,           │
+                      │           is_email_user_only             │
+                      └────────────────────┬─────────────────────┘
+                                           │
+                    ┌──────────────────────┴──────────────────────┐
+                    │                                             │
+      role_type === "admin"                         role_type === "user"
+                    │                                             │
+                    ▼                                             ▼
+       ┌────────────────────────┐                    ┌────────────────────────┐
+       │   Redirect: /home      │                    │ Redirect:              │
+       │   (Full Agent Portal)  │                    │ /support-emails        │
+       └────────────────────────┘                    └────────────────────────┘
+```
+
+1. **Authentication**: The user logs in via credentials form or selects the 1-click credential switcher.
+2. **Session Identification**: `helpdesk.api.auth.get_user` evaluates the authenticated session and returns:
+   - `is_admin`: `true` for administrators; `false` for email users.
+   - `is_email_user_only`: `true` when the user has only `HD Support Email User` access.
+   - `role_type`: `"admin"` or `"user"`.
+   - `has_desk_access`: `true`.
+3. **Automated Post-Login Routing**:
+   - **Admin** is directed to `/home` or `/tickets`.
+   - **User** is immediately redirected to `/support-emails`.
+4. **Visual Role Badge**:
+   - The user menu at the bottom-left of the sidebar dynamically displays a pill badge indicating either `ADMIN` or `USER`.
+
+---
+
+### 4. Direct URL Protection (Frontend Guard)
+
+Hiding navigation buttons is not sufficient for true client security. The Vue Router is configured with global navigation guards in `desk/src/router/index.ts`:
+
+- Whenever an authenticated `User` (`isEmailUserOnly === true`) attempts to access any route other than `/support-emails`:
+  1. The navigation guard intercepts the routing event before the target component renders.
+  2. A notification toast is displayed:
+     > *"Access Denied: Your account role is restricted to Support Email Management only."*
+  3. The router automatically aborts the navigation and redirects the user back to `/support-emails`.
+- Even if a user manually modifies the browser address bar to `/tickets`, `/settings`, `/customers`, or `/custom-reports`, they are immediately blocked and returned to the email management workspace.
+
+---
+
+### 5. Backend API Enforcement & DocType Filtering
+
+Client-side restrictions are backed by server-side authorization in Python ([helpdesk/utils.py](helpdesk/utils.py)):
+
+1. **Email users are not agents**: `is_agent()` only counts `Agent`, `Agent Manager`, admins and active `HD Agent` records. `is_support_email_only()` is true for a user with `HD Support Email User` who is not an agent, so every `@agent_only` endpoint and the HD Ticket permission hooks reject them.
+2. **`@agent_or_email_user_only` Decorator**: The only endpoints opened to this role are `email_management.get_support_emails`, `get_email_dashboard_analytics`, `sync_support_emails`, `export_email_report_xlsx` and `export_email_report_csv`.
+3. **`@admin_only` Decorator**: Placed on all custom report endpoints in `custom_reports.py` (`generate_ticket_report`, the CSV/XLSX/JSON/HTML exports, `get_cgd_entity_breakdown`, `get_hourly_ticket_heatmap`, `send_scheduled_analytics_digest`). Non-admins get `frappe.PermissionError` (HTTP 403).
+4. **List Data Guard** ([helpdesk/api/doc.py](helpdesk/api/doc.py)): `get_list_data` raises `frappe.PermissionError` for every DocType when the caller is a support email user.
+5. **DocType Permissions**: `setup_support_email_role()` in `helpdesk/setup/install.py` grants the role read on `HD Customer` and `HD Team` only, for the page's filters. It uses `frappe.permissions.add_permission`, which copies the DocType's standard permissions first. Inserting a lone `Custom DocPerm` row would make Frappe ignore the JSON permissions for every other role. The HD Customer hooks let the role read every customer, never write.
+
+---
+
+### 6. Provisioning & Testing RBAC
+
+#### Role & Permissions
+The role and its permissions are created by `after_install` on new sites and by the `helpdesk.patches.add_support_email_role` patch on existing sites (`bench migrate`). The patch also deletes the over-broad `Custom DocPerm` rows written by earlier versions of the provisioning script.
+
+#### Account Provisioning Script
+To create or reset the support users (`support.png@amantyatech.com`, `user@example.com`), the Outlook mailbox, and the passwords from `.env` / site config, run it explicitly:
+
+```powershell
+docker exec -it docker-frappe-1 bash -c "cd frappe-bench && bench --site helpdesk.localhost execute helpdesk.setup.setup_rbac.execute"
+```
+
+It resets those users' roles to `HD Support Email User` + `Desk User`. It is not run by tests or migrations.
+
+#### Running the RBAC Unit Test Suite
+The automated test suite verifies both Admin and User permission boundaries:
+
+```powershell
+docker exec docker-frappe-1 /home/frappe/frappe-bench/env/bin/python -c "import sys, os; sys.path.insert(0, '/home/frappe/frappe-bench/apps/frappe'); sys.path.insert(0, '/home/frappe/frappe-bench/apps/helpdesk'); os.chdir('/home/frappe/frappe-bench/sites'); import frappe; frappe.init(site='helpdesk.localhost'); frappe.connect(); import unittest; from helpdesk.tests.test_rbac_access_control import TestRoleBasedAccessControl; suite = unittest.TestLoader().loadTestsFromTestCase(TestRoleBasedAccessControl); res = unittest.TextTestRunner(verbosity=2).run(suite); frappe.destroy(); sys.exit(0 if res.wasSuccessful() else 1)"
+```
+
+The tests build their own users through `make_support_email_user()` in `helpdesk/test_utils.py` and validate:
+- Admin keeps full access to email APIs, list data and custom reports.
+- A support email user is not an agent, can use the email list and analytics, and reads (but cannot write) HD Customer.
+- A support email user gets `frappe.PermissionError` from `@agent_only` APIs, `get_list_data`, ticket reassignment, custom reports and ticket reads.
+- Agents (including granular tiers) who also hold the email role are not restricted.
+- The permission patch restores standard DocType permissions after the old script's lone `Custom DocPerm` row.
 
 ---
 

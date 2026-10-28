@@ -7,6 +7,7 @@ from frappe.permissions import add_permission, update_permission_property
 from helpdesk.consts import DEFAULT_ARTICLE_CATEGORY, DEFAULT_SLA
 from helpdesk.setup.comments import setup_comments_and_notifications
 from helpdesk.setup.default_views import add_default_views
+from helpdesk.utils import SUPPORT_EMAIL_ROLE
 
 from .default_template import create_default_template
 from .file import create_helpdesk_folder
@@ -27,6 +28,7 @@ def after_install():
     add_agent_manager_permissions()
     setup_comments_and_notifications()
     setup_customer_role()
+    setup_support_email_role()
     add_default_assignment_rule()
     create_default_template()
     create_fallback_ticket_type()
@@ -227,6 +229,25 @@ def setup_customer_role(fresh_install=True):
 
     if fresh_install:
         set_portal_defaults(overwrite=True)
+
+
+def setup_support_email_role():
+    """Create the Support Email Management role with read access to the page's filters.
+
+    Its email endpoints query directly, so it needs no Communication or HD Ticket perms.
+    """
+    if frappe.db.exists("Role", SUPPORT_EMAIL_ROLE):
+        role_doc = frappe.get_doc("Role", SUPPORT_EMAIL_ROLE)
+    else:
+        role_doc = frappe.new_doc("Role")
+        role_doc.role_name = SUPPORT_EMAIL_ROLE
+    role_doc.desk_access = 1
+    role_doc.home_page = "/helpdesk"
+    role_doc.save(ignore_permissions=True)
+
+    for dt in ("HD Customer", "HD Team"):
+        # add_permission grants read and keeps the doctype's standard perms
+        add_permission(dt, SUPPORT_EMAIL_ROLE)
 
 
 def setup_granular_agent_roles():

@@ -1,7 +1,7 @@
 # MyPNG Support Desk & Frappe Helpdesk: Architecture, Requirements & Comprehensive Enhancement Plan
 
-> **Document Version**: 2.1  
-> **Last Updated**: 2026-10-19  
+> **Document Version**: 2.4  
+> **Last Updated**: 2026-10-28  
 > **Target Platform**: Frappe Helpdesk (Frappe Framework / Python / MariaDB / Redis / Vue 3 / Vite)  
 > **Context**: Consolidation of Zendesk-grade enterprise ticketing capabilities with the **MyPNG Support Desk** multi-CGD (City Gas Distribution) project requirements.
 
@@ -83,6 +83,8 @@ The table below provides a full inventory of requirements from both the **MyPNG 
 | **32** | **Granular Roles (Tier 1, Tier 2, Lead, Auditor)** | RBAC | MyPNG / Zendesk | **IMPLEMENTED** | `HD Tier 1 Agent`, `HD Tier 2 Agent`, `HD Team Lead`, `HD Auditor` in `setup/install.py`, `hd_ticket.py` (`validate_granular_role_permissions`, `validate_trash_permissions`, `has_permission`). |
 | **33** | **Outgoing Webhooks Engine (Slack/Teams)** | Extensibility | Zendesk | **IMPLEMENTED** | `helpdesk/doctype/hd_webhook/`, `hd_webhook_log/`, `helpdesk/automation/webhook_engine.py`. Event-driven webhook delivery with HMAC SHA-256 signatures, customer filters, custom headers, and audit logs. |
 | **34** | **Customer Portal Enhancement & Multi-CGD Branding** | Portal / Branding | MyPNG / Zendesk | **IMPLEMENTED** | `helpdesk/api/portal.py`, `test_portal_branding.py`, `CgdPortalBanner.vue`, `portal.ts`, `TicketCustomerSidebar.vue`. Dynamic entity logos & banners per CGD entity (BPCL, GAIL, IGL), VIP priority status tags, live SLA countdown badges on customer portal, and 1-5 star CSAT rating widget. |
+| **35** | **Admin vs. Support Email User Roles** | RBAC | MyPNG | **IMPLEMENTED** | `helpdesk/utils.py` (`is_support_email_only`, `agent_or_email_user_only`, `admin_only`), `setup/install.py` (`setup_support_email_role`), `patches/add_support_email_role.py`, `router/index.ts`, `PortalRoot.vue`, `AppSidebar.vue`. `HD Support Email User` can only use `/support-emails`; it is not an agent, so `@agent_only` APIs reject it. See §4.7.4. |
+| **36** | **Microsoft 365 Support Mailbox (OAuth) & Email Management** | Inbound Email | MyPNG | **IMPLEMENTED** *(Exchange grant pending)* | `setup/setup_rbac.py` (Connected App + OAuth Email Account), `overrides/email_account.py` (pull lock, sync status), `api/email_management.py` (sync, list), `api/support_mailbox.py` (status, sign-in, detail, read/unread, reply, attachments), `extends/communication.py`, `SupportMailboxStatus.vue`, `SupportEmailDetail.vue`. See §4.8. |
 
 
 
@@ -316,9 +318,48 @@ Execute Progressive Actions (Send Reminder, Escalate Priority, Auto-Solve)
      - **Verification**: Fully validated by unit tests in `helpdesk/tests/test_guest_magic_link.py` (3/3 tests passed).
   3. **Multi-Brand Portal Support (`TO BE DEVELOPED`)**:
      - Distinct portal themes, domains, and email headers per brand.
+  4. **Admin vs. Support Email User Roles (`IMPLEMENTED`)**:
+     - **Admin**: `is_admin()` is true for `Administrator` and `System Manager`. `@admin_only` guards every endpoint in `custom_reports.py`.
+     - **Support Email User** (`HD Support Email User`): `is_support_email_only()` is true when the user has the role and `is_agent()` is false. The role is deliberately **not** an agent role, so `@agent_only` endpoints, HD Ticket `has_permission` / `permission_query`, and ticket realtime rooms all reject it.
+     - **Opened endpoints**: `@agent_or_email_user_only` on `get_support_emails`, `get_email_dashboard_analytics`, `sync_support_emails`, `export_email_report_xlsx`, `export_email_report_csv`. These query with raw SQL, so the role needs no HD Ticket or Communication DocPerms.
+     - **Also opened (§4.8)**: every `support_mailbox` endpoint except the admin-only `get_mailbox_authorization_url` / `activate_support_mailbox`. So the role can view full threads and attachments, mark read/unread, and reply. `HDTicket.reply_via_agent` accepts the role for that reply.
+     - **Kept agent-only**: `assign_email_ticket`, `get_ticket_assignment_history`, `cgd_portal.assign_or_escalate_ticket`. Reassigning saves the ticket, which the role cannot do, so the Reassign button is hidden for it.
+     - **List data**: `doc.get_list_data` rejects every DocType for the role.
+     - **DocPerms**: `setup_support_email_role()` (called from `after_install` and patch `add_support_email_role`) grants read on `HD Customer` and `HD Team` for the page's filters. HD Customer hooks give the role read on every customer, never write.
+     - **Blocker avoided**: Frappe ignores a DocType's JSON permissions once it has any `Custom DocPerm` row. Inserting a lone row stripped every other role's access, so grants go through `frappe.permissions.add_permission`. The patch deletes the rows the old script inserted directly on HD Ticket, Communication, HD Assignment Log, Email Account, HD Customer and HD Team, then grants again.
+     - **Frontend**: the router guard redirects the role to `/support-emails`; `PortalRoot.vue` renders the agent shell for it; `router.afterEach` skips the agent-only `session.get_users` fetch; `AppSidebar.vue` shows only Support Emails; `get_user` returns `is_email_user_only` and `role_type`.
+     - **Provisioning**: `helpdesk/setup/setup_rbac.py` is run explicitly with `bench execute`. It creates the support users and the Outlook mailbox and sets passwords from env / site config. It is not a patch and tests don't call it.
+     - **Verification**: `helpdesk/tests/test_rbac_access_control.py`, users built with `make_support_email_user()` in `test_utils.py`.
 
 ---
 
+
+### 4.8. Microsoft 365 Support Mailbox & Email Management (`IMPLEMENTED`, Exchange grant pending)
+
+- **Provider & method**: `amantyatech.com` is on Microsoft 365 / Exchange Online (MX `amantyatech-com.mail.protection.outlook.com`). Exchange Online rejects Basic auth for IMAP and SMTP, so the mailbox connects over IMAP/SMTP with **OAuth 2.0 XOAUTH2** using Frappe's `Connected App` and `Email Account.auth_method = "OAuth"`. Delegated-mode scopes: `https://outlook.office.com/IMAP.AccessAsUser.All`, `https://outlook.office.com/SMTP.Send`, `offline_access`.
+- **Provider-side requirements**: an Entra ID app registration (Web redirect URI = the Connected App's `redirect_uri`, a client secret, admin consent if required), and IMAP plus Authenticated SMTP enabled on `support.png@amantyatech.com`. Microsoft only accepts `https://` or `http://localhost` redirect URIs, so the site's `host_name` must match.
+- **Credentials**: `MS365_TENANT_ID`, `MS365_CLIENT_ID`, `MS365_CLIENT_SECRET` come from env vars or site config and are read only by `setup_rbac.py`. The client secret and the tokens are Frappe Password fields, encrypted with the site `encryption_key`. No mailbox password exists. `SUPPORT_EMAIL_PASSWORD` was removed because Basic auth can't work against this tenant.
+- **Auth mode** (`MS365_AUTH_MODE`, default `app`): **app-only** uses the client-credentials flow (`Email Account.backend_app_flow = 1`, Connected App scope `https://outlook.office365.com/.default`). It needs the application permissions `IMAP.AccessAsApp` + `SMTP.SendAsApp` (Office 365 Exchange Online) with admin consent, plus `New-ServicePrincipal`, `Add-MailboxPermission FullAccess` and `Add-RecipientPermission SendAs` on the mailbox in Exchange Online PowerShell. Nobody signs in, and Frappe fetches a token when needed. The status card offers **Activate** (and **Retry** on `app_access_denied`), and `get_mailbox_authorization_url` refuses app-only mailboxes. **Delegated** is the sign-in flow described next. Chosen because the tenant blocks user consent for the delegated scopes. A rejected app login is classified `app_access_denied`, not `authorization_required`, because re-signing-in can't fix missing Exchange grants. Re-running `setup_rbac.py` only switches the mailbox off when it is new or changing mode.
+- **One-time connection**: `setup_rbac.py` creates the Connected App and the `PNG Support Desk` Email Account (IMAP INBOX → HD Ticket) **switched off**. Frappe validates an enabled account by logging in, which needs the token first. An admin clicks **Connect** (`support_mailbox.get_mailbox_authorization_url`, which sets `connected_user` to the signer) and returns to `/helpdesk/support-emails?mailbox_authorized=<account>`. The page then calls `activate_support_mailbox`, which enables the account, lets the save verify the login, and runs the first pull. Frappe refreshes the access token from the stored refresh token, so the connection survives logout and restarts.
+- **Sync**: `scheduled_sync_support_emails` runs every minute (`cron "* * * * *"`) over `get_support_email_accounts()` (Email Accounts whose `append_to` or IMAP folder is HD Ticket). Frappe's own 10-minute pull still runs. `CustomEmailAccount.receive` takes a per-mailbox `filelock`, so the cron, Frappe's pull and **Sync now** never process the same mail concurrently (the race that could create duplicate tickets). Message-ID dedup is Frappe's `InboundMail` check. A mailbox in error is retried by the scheduler only after 5 minutes (`is_backing_off`).
+- **Health**: `CustomEmailAccount.get_inbound_mails` records `connected` / `error` plus an error kind in the Redis hash `helpdesk:support_mailbox_status` and publishes `helpdesk:support-mailbox-status` when the state changes. Kinds: `authorization_required` (OAuth without token, or an OAuth login rejected), `authentication_failed`, `connection_failed`, `processing_failed`, `sync_failed`. API responses carry `get_sync_error_message()` text, never the exception. The status is cache-only; after a Redis restart the next pull (within a minute) rebuilds it.
+- **Fixed with this feature**:
+  - `hooks.py` defined `scheduler_events` twice, and the second dict replaced the first. So email sync, search indexing, `close_tickets_after_n_days` and `update_sla_status_in_ticket` never ran on any site. The two dicts are now merged; sites need `bench migrate` for the jobs to be registered.
+  - `sync_support_emails` counted `receive()`'s return value, which is always `None`, so it reported 0 new emails. It now counts new received Communications.
+  - `sync_support_emails` synced every enabled account, including unrelated ones; now it syncs support mailboxes only.
+  - `sync_support_emails` returned `str(e)` to the browser; now it returns the friendly message only.
+- **Email management** (`api/support_mailbox.py`, all `@agent_or_email_user_only`; agents also pass `frappe.has_permission` on the ticket, support email users pass by role):
+  - `get_support_email` returns the thread (sender name and address, To, Cc, date, Received/Sent, `sanitize_html` body) and attachments. Inline `<script>` is stripped.
+  - `set_support_email_seen` sets `Communication.seen` on the ticket's received emails. The list exposes `is_unread` / `unread_count` and a `read_state` filter. Opening an email marks it read.
+  - `reply_to_support_email` sends a plain-text reply (escaped, newlines → `<br>`) to `raised_by` with optional Cc through `HDTicket.reply_via_agent`. That method now accepts support email users (`@agent_or_email_user_only`). `on_communication_update` saves the ticket with `ignore_permissions` only when a support email user's reply triggered it, because they can't write tickets.
+  - `download_support_email_attachment` serves a File only when it is attached to an HD Ticket or to a Communication of one, and is a local file.
+  - `get_support_emails` adds search over message text and sender name, `sender_name` from the sender's own Communication, `has_attachments` and `last_received_at`.
+- **Live updates**: `extends/communication.after_insert` publishes `helpdesk:support-email-received` (no payload) for each received HD Ticket email; the list and status card reload on it.
+- **Not covered**: inline images that point at private files may not render in the body (download them from the attachment list). Replies have no attachments. IMAP IDLE push isn't supported by Frappe, so delivery delay is up to about 1 minute.
+- **Verification**: `helpdesk/tests/test_support_mailbox.py` (23 tests: error classification, app-only access, raw-error hiding, OAuth without token, lock, backoff, scheduler hooks, admin-only sign-in, detail access per persona, read state, search, attachment scoping, escaped replies by email user and agent, duplicate inbound mail, realtime event). Helpers are in `test_utils.py`.
+- **Rollout state** (`helpdesk.localhost`, 2026-10-28): app-only mode provisioned (scope `https://outlook.office365.com/.default`, `backend_app_flow = 1`), `bench migrate` run so `scheduled_sync_support_emails` is registered, and the mailbox set as default outgoing. Still waiting on the Microsoft 365 admin steps in README §1; then an admin clicks **Activate**.
+
+---
 
 ## 5. Technical Data Model Blueprint (New DocTypes Required)
 
@@ -426,6 +467,21 @@ The following DocTypes and schemas are specified for future implementation:
 │ • [x] Sidebar Assignment & Reassignment Audit Trail integration with in-place trigger      │
 │ • [x] High-visibility Internal Note badge with lock glyph in agent activity timeline       │
 │ • [x] Production asset bundling via Vite (yarn build) and zero regression test pass (100%) │
+└──────────────────────────────────────────────┬──────────────────────────────────────────────┘
+                                               │
+┌──────────────────────────────────────────────▼──────────────────────────────────────────────┐
+│ PHASE 9: Executive Design System Modernization & Portal-Wide Polish [COMPLETED & TESTED]     │
+│ • [x] Modern Enterprise Palette: Royal Blue (#2563eb) primary & Slate neutral tokens         │
+│ • [x] Replaced high-contrast orange/peach sidebar active items with clean subtle pill state  │
+│ • [x] Mailbox Health reassurance banner with live pulsing connection dot (green/amber/red)   │
+│ • [x] KPI Stat Cards with top accent borders and positive/negative trend percentage pills    │
+│ • [x] Inbound Support Emails Table: glowing unread dots, sender metadata, VIP crown badges   │
+│ • [x] Support Email Detail Modal: rich conversation thread, attachment chips, reply composer │
+│ • [x] CGD Entity & Team Distribution Cards: proportion progress bars & VIP tags             │
+│ • [x] CSAT Leaderboard Card: podium medal badges (#1, #2, #3), ratings stars, review counts  │
+│ • [x] Glowing 4-Step Customer Stepper: animated completion nodes, status lines & time badges │
+│ • [x] Modern Executive Login Page: sleek role toggle cards (Admin vs User) & clean inputs    │
+│ • [x] Full production Vite build and 100% backend test suite validation (29/29 tests passed) │
 └─────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 

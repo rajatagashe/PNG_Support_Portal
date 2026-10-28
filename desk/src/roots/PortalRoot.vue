@@ -17,7 +17,10 @@ const CustomerPortalRoot = defineAsyncComponent(
 // shell even on customer-portal pages.
 const Root = computed(() => {
   const authStore = useAuthStore();
-  if (authStore.hasDeskAccess && authStore.isAgent) {
+  if (
+    authStore.hasDeskAccess &&
+    (authStore.isAgent || authStore.isEmailUserOnly)
+  ) {
     return AgentPortalRoot;
   } else {
     return CustomerPortalRoot;
