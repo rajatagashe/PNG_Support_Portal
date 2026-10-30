@@ -12,7 +12,7 @@
         <!-- Figma: text/base/medium, ink-gray-8 -->
         <Tooltip v-if="tooltip" :text="__(tooltip)">
           <span
-            class="text-base font-medium text-ink-gray-8"
+            class="text-sm font-bold text-slate-800 tracking-tight"
             :class="labelClass"
           >
             {{ __(label) || "Untitled" }}
@@ -20,14 +20,14 @@
         </Tooltip>
         <span
           v-else
-          class="text-base font-medium text-ink-gray-8"
+          class="text-sm font-bold text-slate-800 tracking-tight"
           :class="labelClass"
         >
           {{ __(label) || "Untitled" }}
         </span>
         <LucideChevronRight
           v-if="collapsible"
-          class="size-3.5 text-ink-gray-5 transition-transform"
+          class="size-3.5 text-slate-500 transition-transform font-bold"
           :class="{ 'rotate-90': opened }"
         />
         <slot name="actions"></slot>

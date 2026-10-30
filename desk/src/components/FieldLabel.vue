@@ -1,9 +1,9 @@
 <template>
-  <div class="w-[106px] shrink-0 truncate text-base text-ink-gray-5">
+  <div class="w-[106px] shrink-0 truncate text-sm font-semibold text-slate-700">
     <Tooltip :text="__(label)">
       <span>{{ __(label) }}</span>
     </Tooltip>
-    <span v-if="required" class="text-ink-red-6"> * </span>
+    <span v-if="required" class="text-rose-600 font-bold"> * </span>
   </div>
 </template>
 

@@ -6,12 +6,13 @@
 </template>
 
 <script setup lang="ts">
+import pngLogoSvg from "@/assets/png_logo.svg";
 import { Dialogs } from "@/components/dialogs";
 import { useConfigStore } from "@/stores/config";
 import { useFavicon } from "@vueuse/core";
 import { FrappeUIProvider, setConfig, toast, useColorScheme } from "frappe-ui";
 import { storeToRefs } from "pinia";
-import { h, onMounted } from "vue";
+import { computed, h, onMounted } from "vue";
 import Wifi from "~icons/lucide/wifi";
 import WifiOff from "~icons/lucide/wifi-off";
 import { __ } from "./translation";
@@ -20,7 +21,8 @@ import { isCustomerPortal } from "./utils";
 const configStore = useConfigStore();
 const { favicon } = storeToRefs(configStore);
 
-useFavicon(favicon);
+const faviconSrc = computed(() => favicon.value || pngLogoSvg);
+useFavicon(faviconSrc);
 
 if (!localStorage.getItem("theme")) {
   localStorage.setItem("theme", "light");

@@ -24,13 +24,18 @@ COUNT_DESC = "count desc"
 @frappe.whitelist()
 @agent_only
 def get_dashboard_data(
-    dashboard_type: str, filters: dict[str, any] = None
+    dashboard_type: str, filters: dict[str, any] | str | None = None
 ) -> list[dict[str, any]] | None:
     """
     Get dashboard data based on the type and date range.
     """
     user = frappe.session.user
     is_manager = "Agent Manager" in frappe.get_roles(user)
+
+    if isinstance(filters, str):
+        filters = frappe.parse_json(filters)
+    if not filters:
+        filters = {}
 
     if not is_manager and (filters.get("agent") != user or filters.get("team")):
         frappe.throw(

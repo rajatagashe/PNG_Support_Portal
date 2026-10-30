@@ -19,23 +19,23 @@
         }"
       >
         <thead v-if="!showSkeleton && chartConfig?.tickets?.length > 0">
-          <tr class="text-sm text-ink-gray-5">
-            <th class="p-2 text-start font-normal whitespace-nowrap">
+          <tr class="text-xs font-bold text-slate-700 uppercase tracking-wider bg-slate-100/90 rounded-lg">
+            <th class="px-3 py-2 text-start font-bold whitespace-nowrap">
               {{ __("ID") }}
             </th>
-            <th class="p-2 text-start font-normal w-full">
+            <th class="px-3 py-2 text-start font-bold w-full">
               {{ __("Subject") }}
             </th>
-            <th class="p-2 text-start font-normal min-w-16 whitespace-nowrap">
+            <th class="px-3 py-2 text-start font-bold min-w-16 whitespace-nowrap">
               {{ __("Status") }}
             </th>
-            <th class="p-2 text-start font-normal min-w-28 whitespace-nowrap">
+            <th class="px-3 py-2 text-start font-bold min-w-28 whitespace-nowrap">
               {{ __("Priority") }}
             </th>
-            <th class="p-2 text-start font-normal min-w-44 whitespace-nowrap">
+            <th class="px-3 py-2 text-start font-bold min-w-44 whitespace-nowrap">
               {{ __("Team") }}
             </th>
-            <th class="p-2 text-start font-normal min-w-40 whitespace-nowrap">
+            <th class="px-3 py-2 text-start font-bold min-w-40 whitespace-nowrap">
               {{ __("Reason") }}
             </th>
           </tr>
@@ -91,42 +91,38 @@
             </td>
           </tr>
         </tbody>
-        <tbody class="relative" v-else>
-          <tr
-            v-for="i in 8"
-            :key="i"
-            :class="i > 1 ? 'border-t border-outline-elevation-2' : ''"
-          >
+        <tbody v-else>
+          <tr v-if="getPendingTicketsResource.loading" v-for="i in 5" :key="i" class="border-t border-slate-100">
             <td class="p-2 py-3 min-w-8">
-              <div class="h-4 w-full rounded-1 bg-surface-gray-1" />
+              <div class="h-4 w-full rounded bg-slate-100 animate-pulse" />
             </td>
             <td class="p-2 py-3 w-full max-w-0">
-              <div class="h-4 w-full rounded-1 bg-surface-gray-1 max-w-full" />
+              <div class="h-4 w-full rounded bg-slate-100 animate-pulse" />
             </td>
             <td class="p-2 py-3 min-w-14">
-              <div class="h-4 w-full rounded-1 bg-surface-gray-1" />
+              <div class="h-4 w-full rounded bg-slate-100 animate-pulse" />
             </td>
             <td class="p-2 py-3 min-w-21">
-              <div class="h-4 w-full rounded-1 bg-surface-gray-1" />
+              <div class="h-4 w-full rounded bg-slate-100 animate-pulse" />
             </td>
             <td class="p-2 py-3 min-w-28">
-              <div class="h-4 w-full rounded-1 bg-surface-gray-1" />
+              <div class="h-4 w-full rounded bg-slate-100 animate-pulse" />
             </td>
             <td class="p-2 py-3 min-w-40">
-              <div class="h-4 w-full rounded-1 bg-surface-gray-1" />
+              <div class="h-4 w-full rounded bg-slate-100 animate-pulse" />
             </td>
           </tr>
-          <EmptyState
-            class="absolute inset-0 z-10"
-            v-if="
-              !getPendingTicketsResource.loading &&
-              chartConfig?.tickets?.length === 0
-            "
-            :title="emptyState.title"
-            :description="emptyState.description"
-            variant="overlay"
-            text="md"
-          />
+          <tr v-else-if="chartConfig?.tickets?.length === 0">
+            <td colspan="6" class="py-10 text-center">
+              <div class="flex flex-col items-center justify-center space-y-2">
+                <div class="size-11 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center shadow-2xs">
+                  <LucideShieldCheck class="size-5.5 text-emerald-600" />
+                </div>
+                <div class="text-sm font-bold text-slate-800">{{ emptyState.title }}</div>
+                <div class="text-xs text-slate-500 font-medium">{{ emptyState.description }}</div>
+              </div>
+            </td>
+          </tr>
         </tbody>
       </table>
       <div
@@ -162,6 +158,7 @@
 <script setup lang="ts">
 import LucideArrowRight from "~icons/lucide/arrow-right";
 import LucideInfo from "~icons/lucide/info";
+import LucideShieldCheck from "~icons/lucide/shield-check";
 import EmptyState from "@/components/EmptyState.vue";
 import TicketPriority from "@/components/TicketPriority.vue";
 import { useView } from "@/composables/useView";

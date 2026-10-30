@@ -27,7 +27,7 @@
           </div>
           <ThemeSwitcher
             :name="config.brandName || 'Helpdesk'"
-            :logo="config.brandLogo || HDLogo"
+            :logo="config.brandLogo || pngLogo"
           />
         </div>
         <hr class="my-8" />
@@ -45,11 +45,11 @@
 </template>
 
 <script setup lang="ts">
+import pngLogo from "@/assets/png_logo.png";
 import { computed, watch } from "vue";
 import { Button, createDocumentResource, toast } from "frappe-ui";
 import SettingsLayoutBase from "@/components/layouts/SettingsLayoutBase.vue";
 import UnsavedBadge from "@/components/UnsavedBadge.vue";
-import HDLogo from "@/assets/logos/HDLogo.vue";
 import { __ } from "@/translation";
 import { useAuthStore } from "@/stores/auth";
 import { useConfigStore } from "@/stores/config";

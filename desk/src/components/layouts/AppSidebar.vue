@@ -2,7 +2,7 @@
   <Sidebar
     v-model:collapsed="collapsed"
     :collapsible="!mobile"
-    class="border-e border-outline-gray-1"
+    class="!bg-transparent"
     :class="{ '!bg-surface-base': mobile }"
   >
     <div class="flex h-full flex-col p-2">
@@ -92,7 +92,7 @@
         </template>
       </ScrollArea>
 
-      <div class="mt-auto flex flex-col gap-2">
+      <div class="mt-auto flex flex-col gap-2 pt-2 border-t border-slate-100">
         <slot name="footer" :is-collapsed="isCollapsed" />
         <SidebarCollapseToggle v-if="!mobile" />
       </div>
@@ -137,6 +137,7 @@ import { computed, ref, watch } from "vue";
 import type { RouteLocationRaw } from "vue-router";
 import { useRoute, useRouter } from "vue-router";
 import LucideBell from "~icons/lucide/bell";
+import LucideLogOut from "~icons/lucide/log-out";
 import LucideSearch from "~icons/lucide/search";
 import {
   agentPortalSidebarOptions,
@@ -200,6 +201,19 @@ function selectItem(key: string, to: RouteLocationRaw, onSelect?: () => void) {
 }
 
 const authStore = useAuthStore();
+
+const userInitials = computed(() => {
+  const name = authStore.userName || authStore.userId || "Admin";
+  const parts = name.trim().split(/\s+/);
+  if (parts.length >= 2) {
+    return (parts[0][0] + parts[1][0]).toUpperCase();
+  }
+  return name.slice(0, 2).toUpperCase();
+});
+
+const userSubtitle = computed(() => {
+  return authStore.user || (authStore.isAdmin ? "Administrator" : "Support User");
+});
 
 const navItems = computed(() => {
   let options = agentPortalSidebarOptions;

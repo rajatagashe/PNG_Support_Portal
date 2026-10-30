@@ -1,6 +1,10 @@
 <template>
   <div class="relative mx-auto w-full max-w-md flex flex-col gap-5">
-    <HDLogo class="size-8" />
+    <img
+      :src="pngLogo"
+      alt="PNG Support Desk"
+      class="h-8 w-auto max-w-[120px] object-contain"
+    />
 
     <!-- Fixed height keeps the panel from resizing as questions vary in length. -->
     <div class="relative">
@@ -141,7 +145,7 @@
 </template>
 
 <script setup lang="ts">
-import HDLogo from "@/assets/logos/HDLogo.vue";
+import pngLogo from "@/assets/png_logo.png";
 import { __ } from "@/translation";
 import { Button, Select, Textarea, TextInput } from "frappe-ui";
 import { computed, nextTick, reactive, ref, watch } from "vue";

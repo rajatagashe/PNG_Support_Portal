@@ -1,7 +1,7 @@
 # MyPNG Support Desk & Frappe Helpdesk: Architecture, Requirements & Comprehensive Enhancement Plan
 
-> **Document Version**: 2.4  
-> **Last Updated**: 2026-10-28  
+> **Document Version**: 2.5  
+> **Last Updated**: 2026-10-29  
 > **Target Platform**: Frappe Helpdesk (Frappe Framework / Python / MariaDB / Redis / Vue 3 / Vite)  
 > **Context**: Consolidation of Zendesk-grade enterprise ticketing capabilities with the **MyPNG Support Desk** multi-CGD (City Gas Distribution) project requirements.
 
@@ -482,6 +482,118 @@ The following DocTypes and schemas are specified for future implementation:
 │ • [x] Glowing 4-Step Customer Stepper: animated completion nodes, status lines & time badges │
 │ • [x] Modern Executive Login Page: sleek role toggle cards (Admin vs User) & clean inputs    │
 │ • [x] Full production Vite build and 100% backend test suite validation (29/29 tests passed) │
+└──────────────────────────────────────────────┬──────────────────────────────────────────────┘
+                                               │
+┌──────────────────────────────────────────────▼──────────────────────────────────────────────┐
+│ PHASE 10: MoPNG Government Portal Visual Alignment & Screenshot Redesign [COMPLETED & TESTED]│
+│ • [x] Official Government Burnt Orange Palette (#d9531e / #c2410c / #9a3412 / #fff7ed)      │
+│ • [x] Full-width Top Accessibility Bar: font resizer (A- A A+), screen reader, language      │
+│ • [x] White MoPNG / PNGRB / MyPNG Branding Header with user avatar capsule (status pill clean)│
+│ • [x] Floating Rounded Sidebar Card with solid burnt orange active item & white icon/text    │
+│ • [x] Dedicated bottom floating user profile card with initials avatar circle & Sign out     │
+│ • [x] High-Contrast Visual Styling: light slate (#f8fafc/slate-50) filter panels & toolbars  │
+│       providing crisp edge contrast against white page cards and input controls              │
+│ • [x] Restored exact original 5 KPIs: Total Received, Unassigned, Assigned, In Progress,     │
+│       Resolved/Closed with all calculations, comparison deltas, icon badges & business logic  │
+│ • [x] Restored exact original distribution cards: Emails by CGD Entity & Assigned Team       │
+│ • [x] Inbound Support Emails Table: exact original columns, sender details, and pagination   │
+│ • [x] Production asset bundle compilation inside Docker and 100% test suite validation      │
+└──────────────────────────────────────────────┬──────────────────────────────────────────────┘
+                                               │
+┌──────────────────────────────────────────────▼──────────────────────────────────────────────┐
+│ PHASE 11: Modern Split-Screen Login Redesign (Reference Inspiration) [COMPLETED & TESTED]   │
+│ • [x] Split-Screen Layout: Left Burnt-Orange Hero + Right Clean Form Canvas                  │
+│ • [x] Organic Layered Scalloped / Cloud Edges dividing left and right panels seamlessly      │
+│ • [x] Left Hero: "Welcome to", bold MyPNG & PNGRB emblem, mission statement & accreditation  │
+│ • [x] Right Canvas: Bold burnt orange "Log in" header, subtitle, watermark accent            │
+│ • [x] Seamless 1-Click Role Switcher (Admin Role vs User Role support.png) preserved         │
+│ • [x] Styled Inputs: LucideUser & LucideLock icons, password eye toggle, slate borders       │
+│ • [x] Matching Burnt-Orange "Remember Me" checkbox & Pill-Shaped Action Button               │
+│ • [x] Security Disclaimer & Standard Desk Login Link preserved                               │
+│ • [x] 100% Authentication logic, validation, error handling, and redirection verified        │
+│ • [x] Production Vite build (3886 modules, 0 errors) & 29/29 backend tests passing           │
+└──────────────────────────────────────────────┬──────────────────────────────────────────────┘
+                                               │
+┌──────────────────────────────────────────────▼──────────────────────────────────────────────┐
+│ PHASE 12: Modern Dashboard KPI Visual Redesign & Executive Hierarchy [COMPLETED & TESTED]    │
+│ • [x] Color Scheme & Visual Styling Inspired by Reference Screenshot (2026-10-29 135117):     │
+│       - Soft-Tinted Backgrounds: #fefdfa (cream), #fbfefd (mint), #fafbfd (ice),             │
+│         #fffdfc (peach), #fefbfb (rose)                                                      │
+│       - Executive Deep Midnight Navy Numbers (#1b2a5b) for ultra-crisp, high-contrast metrics│
+│       - Colored Circular Dot Indicators (size-2 rounded-full) preceding KPI category titles  │
+│       - Mini Horizontal Progress / Meter Bars (#eef2f6 track with color-coded fill bars)     │
+│       - Percentage Ratio Badges & Trend Indicator Pills honoring negativeIsBetter inversions │
+│       - Interactive "Details ⌵" action links in burnt orange (#ea580c) with chevron icons    │
+│ • [x] Preserved 100% of all 10 original KPIs across both dashboard views with exact formulas: │
+│       - Org / My Stats (5): Tickets, % SLA Fulfilled, Avg First Response, Avg Resolution,    │
+│         Avg Feedback Rating                                                                  │
+│       - Support Emails (5): Total Emails Received, Unassigned Emails, Assigned Emails,        │
+│         Currently In Progress, Resolved / Closed                                             │
+│ • [x] Distribution & CSAT Summaries: Modernized summary cards in CGD Distribution and CSAT   │
+│ • [x] Responsive Architecture: 1-col mobile, 2-col tablet, 5-col desktop unified layout      │
+│ • [x] Zero business logic alterations, 100% verified live backend data, 29/29 tests passed   │
+└──────────────────────────────────────────────┬──────────────────────────────────────────────┘
+                                               │
+┌──────────────────────────────────────────────▼──────────────────────────────────────────────┐
+│ PHASE 13: UI Contrast Overhaul, Amantya Technologies Rebranding, Header Streamlining [DONE]   │
+│ • [x] Complete Removal of Government Branding:                                               │
+│       - Stripped all references to "Government of India", "Ministry of Petroleum and Natural  │
+│         Gas", "PNGRB", and Ashoka Lion Capital emblems across the portal and login page      │
+│       - Explicitly branded as "PNG Support Desk" by "Amantya Technologies Private Limited"   │
+│ • [x] Header Streamlining & Screen Real-Estate Recovery:                                     │
+│       - Removed TopAccessibilityBar (saved 40px) and condensed MainBrandingHeader into a     │
+│         minimal 56px enterprise navbar (recovered 100+ px vertical space)                    │
+│       - Integrated clean portal flame logo, Amantya branding capsule, user status & sign out │
+│ • [x] High-Contrast Workspace & Anti-Washout Elevation:                                      │
+│       - Workspace canvas set to light slate (#f8fafc / #f1f5f9) ensuring all white cards     │
+│         stand out with crisp visual separation instead of blending into white backgrounds    │
+│       - Fixed Home page cards (My Tickets, Avg First Response, Avg Resolution, SLA Alerts)   │
+│         with solid white background, slate-200 borders, and rich typography (#1b2a5b navy)   │
+│       - Strengthened tinted KPI card borders on Dashboard and Support Emails views           │
+│ • [x] Cleaned Sidebar: Removed redundant bottom user card & clutter                          │
+│ • [x] 100% Authentication, Admin/User workflows, and 10 original KPIs preserved (29/29 tests)│
+└──────────────────────────────────────────────┬──────────────────────────────────────────────┘
+                                               │
+┌──────────────────────────────────────────────▼──────────────────────────────────────────────┐
+│ PHASE 14: Tabs, Fields & Table View UI Modernization & Contrast Polish [COMPLETED & TESTED] │
+│ • [x] Unified SaaS Table Card Architecture (Linear / Stripe Pattern):                        │
+│       - Enclosed the entire list view inside ONE cohesive, elevated white card              │
+│         (rounded-2xl border-slate-200/90 shadow-xs overflow-hidden)                         │
+│       - Integrated header toolbar, structured table headers, smooth row dividers, and       │
+│         fused bottom pagination bar into a single continuous container                       │
+│ • [x] Dynamic Active Filter Highlighting (QuickFilterField.vue):                             │
+│       - Inactive fields: Crisp white card with slate-300 border and slate-800 text           │
+│       - Active fields (with value entered): Highlighted with 2px burnt-orange border         │
+│         (!border-[#d9531e]), warm tint (!bg-orange-50/50), bold text, and focused clarity   │
+│ • [x] Tab UI Modernization (Segmented Controls & Navigation Tabs):                           │
+│       - Segmented Pill Tabs (TabButtons): Soft slate container (#e2e8f0) with slate-300      │
+│         border, bold slate-700 inactive text, pure white elevated active pill                │
+│         (#ffffff, shadow-xs, border-slate-300), and burnt-orange active icons                │
+│       - Navigation Underline Tabs (TabList / TabTrigger): Crisp slate-200 border, dark       │
+│         slate font-semibold inactive items, and bold burnt-orange (#d9531e) active state     │
+│         with 2.5px underline indicator and matching primary accent icons                     │
+│       - Pagination Tabs (20 50 100): Clear "Rows per page:" contextual label and clean       │
+│         pill control enclosed in an integrated slate footer toolbar                          │
+│ • [x] Form Field & Field Label Contrast Overhaul:                                            │
+│       - FieldLabel.vue: Replaced faint gray (text-ink-gray-5) with bold slate-700           │
+│         (text-slate-700 font-semibold) and rose-600 required indicator asterisk             │
+│       - Section.vue: Upgraded section titles (Overview, Info) to text-slate-800 font-bold   │
+│       - Sidebar.vue: Disabled onboarding popover banner to remove floating bottom widget     │
+│ • [x] Table Header, Rows & SLA Badges Polish:                                                │
+│       - List Header: Bold uppercase slate-700 headers (#334155) on structured slate-100     │
+│       - List Rows: Clean dividers (#f1f5f9), soft slate-50 hover, bold title text           │
+│       - SLA Status Pills: Upgraded "Failed", "Fulfilled", and countdown duration badges to   │
+│         rich, bordered pill badges (emerald, rose, amber, purple)                            │
+│ • [x] Production asset bundle compiled and 100% backend test suite verified (29/29 passed)   │
+│ • [x] Full-Portal Exact Logo Integration (Zero generic icon replacements):                   │
+│       - Extracted and bundled exact uploaded logo (png_logo.png / png_logo.svg, 400x373)      │
+│       - MainBrandingHeader.vue: Replaced generic LucideFlame with exact uploaded logo emblem   │
+│       - Login.vue: Integrated exact uploaded logo in both left hero panel & right login form  │
+│       - BrandLogo.vue: Default fallback to bundled exact logo with aspect-ratio preservation  │
+│       - UserMenu.vue: Ensured sidebar collapsed & expanded view renders logo cleanly           │
+│       - CgdPortalBanner.vue: Exact logo integrated with object-contain (no crop/distortion)   │
+│       - App.vue & index.html: Dynamic and static favicon and PWA icons set to exact logo       │
+│       - Questionnaire.vue & Preferences.vue: Replaced legacy HDLogo with exact uploaded logo   │
 └─────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 

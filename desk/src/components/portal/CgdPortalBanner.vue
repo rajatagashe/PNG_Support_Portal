@@ -4,15 +4,13 @@
   >
     <div class="flex items-center gap-3">
       <div
-        class="flex size-11 shrink-0 items-center justify-center rounded-lg bg-surface-gray-2 border border-outline-gray-2 text-ink-gray-8 overflow-hidden"
+        class="flex size-11 shrink-0 items-center justify-center rounded-lg bg-white border border-outline-gray-2 p-1 overflow-hidden shadow-2xs"
       >
         <img
-          v-if="portalStore.brandLogo"
-          :src="portalStore.brandLogo"
-          alt="Entity Logo"
-          class="size-11 object-cover"
+          :src="portalStore.brandLogo || pngLogo"
+          alt="PNG Support Desk"
+          class="size-full object-contain"
         />
-        <LucideFlame v-else class="size-6 text-ink-gray-7" />
       </div>
       <div>
         <div class="flex items-center gap-2">
@@ -74,12 +72,12 @@
 </template>
 
 <script setup lang="ts">
+import pngLogo from "@/assets/png_logo.png";
 import { usePortalStore } from "@/stores/portal";
 import { __ } from "@/translation";
 import { Button } from "frappe-ui";
 import LucideBookOpen from "~icons/lucide/book-open";
 import LucideCrown from "~icons/lucide/crown";
-import LucideFlame from "~icons/lucide/flame";
 import LucidePlus from "~icons/lucide/plus";
 
 withDefaults(

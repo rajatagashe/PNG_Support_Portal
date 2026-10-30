@@ -33,23 +33,23 @@
 
     <div v-else class="px-4 py-4 w-full overflow-y-scroll">
       <!-- Filters -->
-      <div class="mb-4 flex items-center gap-4 overflow-x-auto px-1 py-1">
+      <div class="mb-4 flex flex-wrap items-center gap-3 p-3 bg-slate-50/90 border border-slate-200/90 rounded-2xl shadow-xs">
         <Dropdown v-if="!showDatePicker" :options="options">
           <template #default>
             <div
-              class="flex justify-between !min-w-48 items-center border border-outline-gray-2 rounded-4 text-ink-gray-8 px-2 py-1.5 hover:border-outline-gray-3 hover:shadow-sm focus:border-outline-gray-4 focus:shadow-sm focus:ring-0 focus-visible:ring-0 transition-colors h-7 cursor-pointer"
+              class="flex justify-between !min-w-48 items-center bg-white border border-slate-300 rounded-lg text-slate-800 px-3 py-1.5 hover:border-slate-400 hover:shadow-xs focus:border-slate-400 focus:shadow-xs focus:ring-0 focus-visible:ring-0 transition-colors h-8 cursor-pointer shadow-2xs"
             >
               <div class="flex items-center">
-                <LucideCalendar class="size-4 text-ink-gray-5 me-2" />
-                <span class="text-base whitespace-nowrap">{{ preset }}</span>
+                <LucideCalendar class="size-4 text-slate-500 me-2" />
+                <span class="text-sm font-medium whitespace-nowrap">{{ preset }}</span>
               </div>
-              <LucideChevronDown class="size-4 text-ink-gray-5" />
+              <LucideChevronDown class="size-4 text-slate-500" />
             </div>
           </template>
         </Dropdown>
         <DateRangePicker
           v-else
-          class="!w-48"
+          class="!w-48 bg-white rounded-lg shadow-2xs"
           ref="datePickerRef"
           v-model="periodRange"
           variant="outline"
@@ -61,19 +61,19 @@
             <!-- ms-px: TextInput anchors the prefix to the wrapper, which sits
                  outside the input's 1px border, so it lands 1px left of the
                  preset trigger's icon. -->
-            <LucideCalendar class="size-4 text-ink-gray-5 ms-px me-2" />
+            <LucideCalendar class="size-4 text-slate-500 ms-px me-2" />
           </template>
         </DateRangePicker>
         <Link
           v-if="isManager && !viewMyStats"
-          class="w-48"
+          class="w-48 bg-white rounded-lg shadow-2xs"
           doctype="HD Team"
           variant="outline"
           :placeholder="__('Team')"
           v-model="filters.team"
         >
           <template #prefix>
-            <LucideUsers class="size-4 text-ink-gray-5 me-1" />
+            <LucideUsers class="size-4 text-slate-500 me-1" />
           </template>
           <!-- One line per row: the filter only needs the name. -->
           <template #item-label="{ item }">
@@ -82,7 +82,7 @@
         </Link>
         <Link
           v-if="isManager && !viewMyStats"
-          class="w-48"
+          class="w-48 bg-white rounded-lg shadow-2xs"
           doctype="HD Agent"
           variant="outline"
           :placeholder="__('Agent')"
@@ -90,7 +90,7 @@
           :filters="agentFilter"
         >
           <template #prefix>
-            <LucideUser class="size-4 text-ink-gray-5 me-1" />
+            <LucideUser class="size-4 text-slate-500 me-1" />
           </template>
           <!-- One line per row: the filter only needs the name. -->
           <template #item-label="{ item }">
@@ -108,9 +108,9 @@
       </div>
       <!-- Charts -->
 
-      <!-- Number Cards -->
+      <!-- Modernized Executive Number Cards (Inspired by Reference Palette) -->
       <div
-        class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-4 px-1"
+        class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5 mb-4 px-1"
         v-if="!numberCards.loading"
       >
         <Tooltip
@@ -118,7 +118,97 @@
           :key="index"
           :text="tooltip"
         >
-          <NumberCard v-bind="card" />
+          <div
+            class="border rounded-2xl p-3.5 sm:p-4 shadow-xs transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 flex flex-col justify-between select-none group min-h-[148px]"
+            :class="[getKpiCardConfig(index, card).cardBg, getKpiCardConfig(index, card).cardBorder]"
+          >
+            <!-- Top Row: Colored Dot + Title + Subtle Glyph -->
+            <div class="flex items-center justify-between gap-1.5">
+              <div class="flex items-center gap-2 min-w-0">
+                <span
+                  class="size-2 rounded-full shrink-0"
+                  :class="getKpiCardConfig(index, card).dotColor"
+                />
+                <span
+                  class="text-xs sm:text-sm font-semibold text-slate-800 tracking-tight truncate"
+                  :title="card.title"
+                >
+                  {{ __(card.title) }}
+                </span>
+              </div>
+              <div class="size-6 rounded-md flex items-center justify-center shrink-0 text-slate-400 group-hover:scale-110 transition-transform">
+                <component :is="getKpiCardConfig(index, card).icon" class="size-3.5" />
+              </div>
+            </div>
+
+            <!-- Value & Subtext (Executive Navy Typography) -->
+            <div class="mt-1.5">
+              <div class="flex items-baseline">
+                <span class="text-2xl sm:text-3xl font-extrabold text-[#1b2a5b] tracking-tight leading-none">
+                  {{ card.value !== null && card.value !== undefined ? card.value : "-" }}
+                </span>
+                <span
+                  v-if="card.suffix && card.value !== null && card.value !== undefined"
+                  class="text-xs font-bold text-slate-500 ms-1"
+                >
+                  {{ card.suffix }}
+                </span>
+              </div>
+              <div class="text-[11px] text-slate-500 font-medium truncate mt-1">
+                {{ __(getKpiCardConfig(index, card).subtext) }}
+              </div>
+            </div>
+
+            <!-- Meter Progress Line & Ratio Label -->
+            <div class="mt-2">
+              <div class="h-1.5 w-full bg-[#eef2f6] rounded-full overflow-hidden">
+                <div
+                  class="h-full rounded-full transition-all duration-500"
+                  :class="getKpiCardConfig(index, card).barColor"
+                  :style="{ width: getKpiCardConfig(index, card).barWidth }"
+                />
+              </div>
+
+              <div class="flex items-center justify-between text-[11px] font-semibold mt-1">
+                <span :class="getKpiCardConfig(index, card).ratioColor">
+                  {{ getKpiCardConfig(index, card).ratioText }}
+                </span>
+                <span
+                  v-if="card.delta !== null && card.delta !== undefined"
+                  class="text-[10px] font-bold px-1.5 py-0.2 rounded-full inline-flex items-center gap-0.5"
+                  :class="
+                    (card.negativeIsBetter ? card.delta <= 0 : card.delta >= 0)
+                      ? 'bg-emerald-100 text-emerald-800'
+                      : 'bg-rose-100 text-rose-800'
+                  "
+                >
+                  <LucideTrendingUp
+                    v-if="card.delta >= 0"
+                    class="size-2.5"
+                    :class="card.negativeIsBetter ? 'text-rose-600' : 'text-emerald-600'"
+                  />
+                  <LucideTrendingDown
+                    v-else
+                    class="size-2.5"
+                    :class="card.negativeIsBetter ? 'text-emerald-600' : 'text-rose-600'"
+                  />
+                  <span>{{ card.delta >= 0 ? '+' : '' }}{{ card.delta }}{{ card.deltaSuffix || '' }}</span>
+                </span>
+              </div>
+            </div>
+
+            <!-- Footer: Context + Details Link -->
+            <div class="flex items-center justify-between pt-2 mt-1.5 border-t border-slate-200/60 text-[11px] font-medium text-slate-500">
+              <span>{{ __(getKpiCardConfig(index, card).footerLeft) }}</span>
+              <router-link
+                to="/tickets"
+                class="text-[#ea580c] hover:text-[#c2410c] font-semibold inline-flex items-center gap-0.5 transition-colors cursor-pointer"
+              >
+                <span>{{ __('Details') }}</span>
+                <LucideChevronDown class="size-3" />
+              </router-link>
+            </div>
+          </div>
         </Tooltip>
       </div>
       <div
@@ -254,12 +344,113 @@ import LucideBuilding2 from "~icons/lucide/building-2";
 import LucideUser from "~icons/lucide/user";
 import LucideMail from "~icons/lucide/mail";
 import LucideFileSpreadsheet from "~icons/lucide/file-spreadsheet";
+import LucideCheckCircle2 from "~icons/lucide/check-circle-2";
+import LucideClock from "~icons/lucide/clock";
+import LucideShieldCheck from "~icons/lucide/shield-check";
+import LucideStar from "~icons/lucide/star";
+import LucideTicket from "~icons/lucide/ticket";
+import LucideTrendingDown from "~icons/lucide/trending-down";
+import LucideTrendingUp from "~icons/lucide/trending-up";
 import CsatLeaderboardCard from "./CsatLeaderboardCard.vue";
 import CgdDistributionCard from "./CgdDistributionCard.vue";
 import CustomReportsModal from "./CustomReportsModal.vue";
 import SupportEmailAnalyticsTab from "./SupportEmailAnalyticsTab.vue";
 const { isMobileView } = useScreenSize();
 const showCustomReportModal = ref(false);
+
+function getKpiCardConfig(index: number, card: any) {
+  switch (index) {
+    case 0: // Tickets
+      return {
+        cardBg: "bg-[#fefdfa]",
+        cardBorder: "border-amber-200/90 hover:border-amber-400",
+        dotColor: "bg-[#f59e0b]",
+        barColor: "bg-[#f59e0b]",
+        barWidth: "100%",
+        ratioColor: "text-amber-700",
+        ratioText:
+          card.delta !== null && card.delta !== undefined
+            ? `${card.delta >= 0 ? "+" : ""}${card.delta}${card.deltaSuffix || "%"} vs last period`
+            : "Total volume",
+        subtext: "Logged support tickets",
+        footerLeft: "All tickets",
+        icon: LucideTicket,
+      };
+    case 1: // % SLA Fulfilled
+      const slaVal = Math.min(100, Math.max(0, parseFloat(card.value) || 0));
+      return {
+        cardBg: "bg-[#fbfefd]",
+        cardBorder: "border-emerald-200/90 hover:border-emerald-400",
+        dotColor: "bg-[#10b981]",
+        barColor: "bg-[#10b981]",
+        barWidth: `${slaVal}%`,
+        ratioColor: "text-emerald-700",
+        ratioText: `${card.value !== null && card.value !== undefined ? card.value : 0}% compliance`,
+        subtext: "Response & resolution SLA",
+        footerLeft: "SLA target: 95%",
+        icon: LucideShieldCheck,
+      };
+    case 2: // Avg. First Response
+      return {
+        cardBg: "bg-[#fffdfc]",
+        cardBorder: "border-orange-200/90 hover:border-orange-400",
+        dotColor: "bg-[#ea580c]",
+        barColor: "bg-[#ea580c]",
+        barWidth: "72%",
+        ratioColor: "text-orange-700",
+        ratioText:
+          card.delta !== null && card.delta !== undefined
+            ? `${card.delta <= 0 ? "Improved " : "Increased "}${Math.abs(card.delta)}${card.deltaSuffix || "%"}`
+            : "First reply latency",
+        subtext: "First agent reply duration",
+        footerLeft: "Target: <2h",
+        icon: LucideClock,
+      };
+    case 3: // Avg. Resolution
+      return {
+        cardBg: "bg-[#fafbfd]",
+        cardBorder: "border-slate-300 hover:border-indigo-400",
+        dotColor: "bg-[#1b2a5b]",
+        barColor: "bg-[#1b2a5b]",
+        barWidth: "64%",
+        ratioColor: "text-slate-800",
+        ratioText:
+          card.delta !== null && card.delta !== undefined
+            ? `${card.delta <= 0 ? "Faster " : "Slower "}${Math.abs(card.delta)}${card.deltaSuffix || "%"}`
+            : "Full lifecycle duration",
+        subtext: "Full resolution cycle",
+        footerLeft: "Target: <24h",
+        icon: LucideCheckCircle2,
+      };
+    case 4: // Avg. Feedback Rating
+      const rating = Math.min(5, Math.max(0, parseFloat(card.value) || 0));
+      return {
+        cardBg: "bg-[#fefbfb]",
+        cardBorder: "border-rose-300 hover:border-rose-400",
+        dotColor: "bg-[#ef4444]",
+        barColor: "bg-[#ef4444]",
+        barWidth: `${(rating / 5) * 100}%`,
+        ratioColor: "text-rose-700",
+        ratioText: `${card.value !== null && card.value !== undefined ? card.value : "0.0"} / 5.0 score`,
+        subtext: "Customer satisfaction score",
+        footerLeft: "CSAT rating",
+        icon: LucideStar,
+      };
+    default:
+      return {
+        cardBg: "bg-white",
+        cardBorder: "border-slate-300 hover:border-slate-400",
+        dotColor: "bg-slate-400",
+        barColor: "bg-slate-400",
+        barWidth: "50%",
+        ratioColor: "text-slate-600",
+        ratioText: "",
+        subtext: "",
+        footerLeft: "Status",
+        icon: LucideTicket,
+      };
+  }
+}
 
 interface NumberCardData {
   title: string;

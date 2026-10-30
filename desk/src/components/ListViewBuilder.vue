@@ -1,145 +1,151 @@
 <template>
-  <!-- View Controls -->
-  <div
-    :class="[
-      'flex items-center justify-between gap-2 px-5 pb-4 pt-4',
-      list?.data?.data?.length > 0 ? 'relative' : 'absolute inset-x-0',
-    ]"
-    v-if="showViewControls"
-  >
-    <QuickFilters v-if="!isMobileView" />
-    <div v-if="!isMobileView" class="-ms-2 h-5 border-s"></div>
+  <div class="mx-3 sm:mx-5 mb-5 bg-white border border-slate-200/90 rounded-2xl shadow-xs overflow-hidden flex flex-col">
+    <!-- View Controls -->
     <div
-      class="flex items-start gap-2 justify-end h-full py-1 ps-0.5"
-      v-if="!isMobileView"
+      class="flex items-center justify-between gap-3 px-4 py-3 bg-slate-50/80 border-b border-slate-200/90"
+      v-if="showViewControls"
     >
-      <Button
-        :label="__('Save Changes')"
-        v-if="isViewUpdated && canSaveView"
-        @click="handleViewUpdate"
-      />
-      <Reload @click="handleReload" :loading="list.loading" />
-      <Filter />
-      <SortBy :hide-label="isMobileView" />
-      <ColumnSettings
-        :hide-label="isMobileView"
-        v-if="!options.hideColumnSetting"
-      />
-    </div>
-    <div v-else class="flex justify-between items-center w-full">
-      <Filter />
-      <div class="flex items-center gap-2">
+      <QuickFilters v-if="!isMobileView" />
+      <div v-if="!isMobileView" class="h-6 w-px bg-slate-200 shrink-0"></div>
+      <div
+        class="flex items-center gap-2 justify-end h-full py-0.5 ps-0.5 shrink-0 [&_button]:bg-white [&_button]:border [&_button]:border-slate-300 hover:[&_button]:border-slate-400 hover:[&_button]:bg-slate-50 [&_button]:text-slate-700 [&_button]:font-medium [&_button]:shadow-2xs [&_button]:rounded-lg"
+        v-if="!isMobileView"
+      >
+        <Button
+          :label="__('Save Changes')"
+          v-if="isViewUpdated && canSaveView"
+          @click="handleViewUpdate"
+        />
         <Reload @click="handleReload" :loading="list.loading" />
+        <Filter />
         <SortBy :hide-label="isMobileView" />
+        <ColumnSettings
+          :hide-label="isMobileView"
+          v-if="!options.hideColumnSetting"
+        />
+      </div>
+      <div v-else class="flex justify-between items-center w-full">
+        <Filter />
+        <div class="flex items-center gap-2">
+          <Reload @click="handleReload" :loading="list.loading" />
+          <SortBy :hide-label="isMobileView" />
+        </div>
       </div>
     </div>
-  </div>
 
-  <!-- Loading State -->
-  <div
-    v-if="list.loading && !list.data?.data?.length"
-    class="flex items-center justify-center h-full w-full absolute top-0 z-100"
-  >
-    <LoadingIndicator class="size-6 text-ink-gray-4" />
-  </div>
-  <!-- List View -->
-  <ListView
-    v-else-if="list.data?.data.length > 0"
-    class="flex-1"
-    :columns="columns"
-    :rows="rows"
-    row-key="name"
-    :options="{
-      selectable: options.selectable,
-      showTooltip: false,
-      resizeColumn: true,
-      getRowRoute: (row) => ({
-        name: options.rowRoute?.name,
-        params: { [options.rowRoute?.prop]: row.name },
-        query: { view: route.query?.view },
-      }),
-      emptyState,
-    }"
-  >
-    <ListHeader class="sm:mx-5 mx-3">
-      <ListHeaderItem
-        v-for="column in columns"
-        :key="column.key"
-        :item="column"
-        @columnWidthUpdated="handleColumnResize"
-      />
-    </ListHeader>
-    <ListRows
+    <!-- Loading State -->
+    <div
+      v-if="list.loading && !list.data?.data?.length"
+      class="flex items-center justify-center py-20 w-full"
+    >
+      <LoadingIndicator class="size-6 text-ink-gray-4" />
+    </div>
+    <!-- List View -->
+    <ListView
+      v-else-if="list.data?.data.length > 0"
+      class="flex-1 w-full"
+      :columns="columns"
       :rows="rows"
-      v-slot="{ idx, column, item, row }"
-      :group-by-actions="options.groupByActions"
-      @scrollend="handleListScroll"
-      class="list-rows"
-    >
-      <ListRowItem :item="item" :column="column" :row="row">
-        <component
-          :is="listCell(column, row, item, idx)"
-          :key="column.key"
-          @click="(e) => handleFieldClick(e, column, row, item)"
-        />
-      </ListRowItem>
-    </ListRows>
-    <ListSelectBanner v-if="options.showSelectBanner">
-      <template #actions="{ selections, unselectAll }">
-        <div class="flex items-center gap-1">
-          <Button
-            v-for="action in selectBannerOptions(selections, unselectAll, true)"
-            :key="action.label"
-            :label="action.label"
-            :icon-left="action.icon"
-            variant="ghost"
-            @click="action.onClick"
-          />
-          <Dropdown :options="selectBannerOptions(selections, unselectAll)">
-            <Button icon="lucide-more-horizontal" variant="ghost" />
-          </Dropdown>
-        </div>
-      </template>
-    </ListSelectBanner>
-  </ListView>
-
-  <!-- List Footer -->
-  <div
-    class="p-20 border-t sm:px-5 px-3 py-2"
-    v-if="list.data?.data.length > 0"
-  >
-    <ListFooter
+      row-key="name"
       :options="{
-        rowCount: list?.data?.row_count,
-        totalCount: list?.data?.total_count,
+        selectable: options.selectable,
+        showTooltip: false,
+        resizeColumn: true,
+        getRowRoute: (row) => ({
+          name: options.rowRoute?.name,
+          params: { [options.rowRoute?.prop]: row.name },
+          query: { view: route.query?.view },
+        }),
+        emptyState,
       }"
-      :pageLengthCount="defaultParams.page_length_count"
-      @loadMore="handlePageLength(defaultParams.page_length_count, true)"
-      v-model="defaultParams.page_length_count"
-      @update:modelValue="
-        (count) => {
-          handlePageLength(count);
-        }
-      "
     >
-      <!-- frappe-ui's ListFooter still feeds TabButtons the removed `buttons`
-           prop, so its own page-length picker renders nothing. -->
-      <template #left>
-        <TabButtons
-          :model-value="defaultParams.page_length_count"
-          :options="[20, 50, 100].map((o) => ({ label: String(o), value: o }))"
-          @update:model-value="(count) => handlePageLength(count)"
+      <ListHeader class="px-4 py-2.5 bg-slate-100/70 border-b border-slate-200/80">
+        <ListHeaderItem
+          v-for="column in columns"
+          :key="column.key"
+          :item="column"
+          @columnWidthUpdated="handleColumnResize"
         />
-      </template>
-    </ListFooter>
+      </ListHeader>
+      <ListRows
+        :rows="rows"
+        v-slot="{ idx, column, item, row }"
+        :group-by-actions="options.groupByActions"
+        @scrollend="handleListScroll"
+        class="list-rows px-2"
+      >
+        <ListRowItem :item="item" :column="column" :row="row">
+          <component
+            :is="listCell(column, row, item, idx)"
+            :key="column.key"
+            @click="(e) => handleFieldClick(e, column, row, item)"
+          />
+        </ListRowItem>
+      </ListRows>
+      <ListSelectBanner v-if="options.showSelectBanner">
+        <template #actions="{ selections, unselectAll }">
+          <div class="flex items-center gap-1">
+            <Button
+              v-for="action in selectBannerOptions(selections, unselectAll, true)"
+              :key="action.label"
+              :label="action.label"
+              :icon-left="action.icon"
+              variant="ghost"
+              @click="action.onClick"
+            />
+            <Dropdown :options="selectBannerOptions(selections, unselectAll)">
+              <Button icon="lucide-more-horizontal" variant="ghost" />
+            </Dropdown>
+          </div>
+        </template>
+      </ListSelectBanner>
+    </ListView>
+
+    <!-- Empty State -->
+    <div v-else-if="!list.loading" class="py-16">
+      <EmptyState
+        :title="emptyState.title"
+        :icon="emptyState.icon"
+        :description="emptyState.description"
+      />
+    </div>
+
+    <!-- List Footer -->
+    <div
+      class="border-t border-slate-200/90 bg-slate-50/80 px-4 py-2.5"
+      v-if="list.data?.data.length > 0"
+    >
+      <ListFooter
+        :options="{
+          rowCount: list?.data?.row_count,
+          totalCount: list?.data?.total_count,
+        }"
+        :pageLengthCount="defaultParams.page_length_count"
+        @loadMore="handlePageLength(defaultParams.page_length_count, true)"
+        v-model="defaultParams.page_length_count"
+        @update:modelValue="
+          (count) => {
+            handlePageLength(count);
+          }
+        "
+      >
+        <!-- frappe-ui's ListFooter still feeds TabButtons the removed `buttons`
+             prop, so its own page-length picker renders nothing. -->
+        <template #left>
+          <div class="flex items-center gap-2.5">
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-500">
+              {{ __('Rows per page:') }}
+            </span>
+            <TabButtons
+              :model-value="defaultParams.page_length_count"
+              :options="[20, 50, 100].map((o) => ({ label: String(o), value: o }))"
+              @update:model-value="(count) => handlePageLength(count)"
+            />
+          </div>
+        </template>
+      </ListFooter>
+    </div>
   </div>
-  <!-- Empty State -->
-  <EmptyState
-    v-else-if="!list.loading"
-    :title="emptyState.title"
-    :icon="emptyState.icon"
-    :description="emptyState.description"
-  />
 </template>
 
 <script setup lang="ts">

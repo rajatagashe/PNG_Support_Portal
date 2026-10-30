@@ -63,7 +63,7 @@
 </template>
 
 <script setup lang="ts">
-import HDLogo from "@/assets/logos/HDLogo.vue";
+import pngLogo from "@/assets/png_logo.png";
 import { FrappeCloudIcon, InviteCustomer } from "@/components/icons";
 import CustomerPortalPermissionBanner from "@/components/banners/CustomerPortalPermissionBanner.vue";
 import TicketFieldPermissionBanner from "@/components/banners/TicketFieldPermissionBanner.vue";
@@ -205,19 +205,17 @@ const profileSettings = computed(() => {
 });
 
 const logo = h(
-  HDLogo,
+  "img",
   {
-    class: "h-12 w-12",
+    src: pngLogo,
+    alt: "PNG Support Desk",
+    class: "h-12 w-auto object-contain",
   },
   null
 );
 
 const showOnboardingBanner = computed(() => {
-  return (
-    !isCustomerPortal.value &&
-    !isOnboardingStepsCompleted?.value &&
-    authStore.isManager
-  );
+  return false;
 });
 
 const steps = [

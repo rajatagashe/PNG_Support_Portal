@@ -1,26 +1,33 @@
 <template>
-  <FadedScrollableDiv
-    class="quick-filters flex flex-1 items-center overflow-x-auto py-1 gap-2 pe-4 ps-1 -ms-1"
-    orientation="horizontal"
-    v-if="!quickFilters.loading"
-  >
-    <div
-      v-for="filter in quickFilters.data"
-      :key="filter.name"
-      class="min-w-36"
-    >
-      <QuickFilterField
-        :filter="filter"
-        :value="getValue(filter, list.params?.filters)"
-        @applyQuickFilter="(f, v) => applyQuickFilter(f, v)"
-      />
+  <div class="flex items-center gap-2 flex-1 min-w-0" v-if="!quickFilters.loading && quickFilters.data?.length">
+    <div class="flex items-center gap-1.5 text-xs font-semibold text-slate-500 uppercase tracking-wider shrink-0 ps-1">
+      <LucideListFilter class="size-4 text-slate-400" />
+      <span>{{ __('Filters') }}:</span>
     </div>
-  </FadedScrollableDiv>
+    <FadedScrollableDiv
+      class="quick-filters flex flex-1 items-center overflow-x-auto py-1 gap-2 pe-2 ps-0.5"
+      orientation="horizontal"
+    >
+      <div
+        v-for="filter in quickFilters.data"
+        :key="filter.name"
+        class="min-w-36 shrink-0"
+      >
+        <QuickFilterField
+          :filter="filter"
+          :value="getValue(filter, list.params?.filters)"
+          @applyQuickFilter="(f, v) => applyQuickFilter(f, v)"
+        />
+      </div>
+    </FadedScrollableDiv>
+  </div>
 </template>
 
 <script setup>
 import { FadedScrollableDiv } from "@/components";
+import { __ } from "@/translation";
 import { inject } from "vue";
+import LucideListFilter from "~icons/lucide/list-filter";
 import { normalizeFilters } from "./filter";
 import QuickFilterField from "./QuickFilterField.vue";
 

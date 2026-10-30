@@ -1,32 +1,32 @@
 <template>
-  <div class="flex items-center">
+  <div class="flex items-center gap-1">
     <router-link
       :to="{ name: routeName }"
-      class="ps-0 pe-0.5 py-1 text-lg-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-outline-gray-3 text-ink-gray-5 hover:text-ink-gray-7 flex items-center justify-center"
+      class="ps-1 pe-1 py-1 text-base font-semibold text-slate-500 hover:text-slate-900 focus:outline-none transition-colors flex items-center justify-center"
     >
       {{ isMobileView ? "..." : label }}
     </router-link>
-    <span class="ml-0.5 text-base text-ink-gray-4" aria-hidden="true"> / </span>
+    <span class="text-sm font-semibold text-slate-400" aria-hidden="true"> / </span>
     <Dropdown v-model:open="isOpen" :options="options">
       <template #default="{ open }">
         <Button
           variant="ghost"
-          class="max-w-[200px] sm:max-w-none !bg-transparent hover:!bg-surface-gray-3 focus-visible:!ring-0"
-          :class="open && '!bg-surface-gray-3'"
+          class="max-w-[200px] sm:max-w-none !bg-transparent hover:!bg-slate-100 focus-visible:!ring-0 px-2 py-1 rounded-lg"
+          :class="open && '!bg-slate-100'"
         >
-          <span class="text-lg-medium text-nowrap truncate">{{
+          <span class="text-lg font-bold text-slate-900 text-nowrap truncate">{{
             currentView.label
           }}</span>
           <template #prefix>
             <component
               :is="currentView.icon"
-              class="flex size-4 shrink-0 items-center justify-center"
+              class="flex size-4 shrink-0 items-center justify-center text-slate-700"
             />
           </template>
           <template #suffix>
             <component
               :is="open ? LucideChevronUp : LucideChevronDown"
-              class="h-4 text-ink-gray-8"
+              class="h-4 text-slate-700 ms-1"
             />
           </template>
         </Button>

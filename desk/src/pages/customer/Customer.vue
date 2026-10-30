@@ -45,13 +45,13 @@
           v-model="activeTab"
           :tabs="tabs"
           size="md"
-          class="tabs-sticky-header flex-1 overflow-hidden [&_[role='tablist']]:!bg-surface-base [&_[role='tablist']]:px-5 [&_[role='tablist']]:py-1.5 max-sm:[&_[role='tablist']]:px-3 [&_[role='tabpanel'][data-state='active']]:flex-1 [&_[role='tabpanel'][data-state='active']]:flex [&_[role='tabpanel'][data-state='active']]:flex-col [&_[role='tabpanel'][data-state='active']]:overflow-auto [&_[role='tabpanel'][data-state='active']]:min-h-0"
+          class="tabs-sticky-header flex-1 overflow-hidden [&_[role='tablist']]:!bg-slate-50/80 [&_[role='tablist']]:border-b [&_[role='tablist']]:border-slate-200 [&_[role='tablist']]:px-5 [&_[role='tablist']]:py-2 max-sm:[&_[role='tablist']]:px-3 [&_[role='tabpanel'][data-state='active']]:flex-1 [&_[role='tabpanel'][data-state='active']]:flex [&_[role='tabpanel'][data-state='active']]:flex-col [&_[role='tabpanel'][data-state='active']]:overflow-auto [&_[role='tabpanel'][data-state='active']]:min-h-0"
         >
           <template #tab-label="{ tab }: any">
-            <span class="group flex items-center gap-2">
+            <span class="group flex items-center gap-2 font-semibold">
               {{ __(tab.label) }}
               <Badge
-                class="group-hover:bg-surface-gray-10 !bg-surface-gray-2 !text-ink-gray-7"
+                class="!bg-orange-50 !text-[#d9531e] !border !border-orange-300 font-bold px-2 py-0.5 rounded-full text-xs shadow-2xs"
                 variant="solid"
                 theme="gray"
                 size="sm"

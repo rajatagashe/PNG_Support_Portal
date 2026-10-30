@@ -1,5 +1,5 @@
 <template>
-  <div class="h-full w-full rounded-4 border border-outline-gray-1">
+  <div class="h-full w-full rounded-2xl border border-slate-200/90 bg-white shadow-xs transition-all duration-200 hover:shadow-md hover:border-slate-300 overflow-hidden">
     <AgentTicketsCard v-if="item.chart == 'agent_tickets'" :data="item.data" />
     <LineChartCard
       v-if="item.chart == 'avg_first_response_time'"

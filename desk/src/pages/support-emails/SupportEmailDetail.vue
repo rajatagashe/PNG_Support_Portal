@@ -10,48 +10,50 @@
 
       <div v-else-if="email" class="space-y-4 text-sm">
         <!-- Ticket summary & actions -->
-        <div class="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-outline-gray-2 bg-surface-gray-1/70 p-3 text-xs text-ink-gray-7 shadow-2xs">
+        <div class="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50/90 p-3 text-xs text-slate-700 shadow-2xs">
           <div class="flex flex-wrap items-center gap-2">
-            <span class="font-mono font-semibold px-2 py-0.5 rounded bg-surface-white border border-outline-gray-2 text-ink-gray-9">
+            <span class="font-mono font-bold px-2 py-0.5 rounded bg-white border border-slate-300 text-slate-900">
               #{{ email.ticket.name }}
             </span>
             <span
-              class="px-2.5 py-0.5 rounded-full font-semibold border inline-flex items-center gap-1.5"
+              class="px-2.5 py-0.5 rounded-full font-bold border inline-flex items-center gap-1.5 shadow-2xs"
               :class="getStatusBadgeClass(email.ticket.status)"
             >
               <span class="size-1.5 rounded-full" :class="getStatusDotClass(email.ticket.status)" />
               {{ email.ticket.status }}
             </span>
-            <span v-if="email.ticket.customer" class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-blue-50 text-primary border border-blue-200 font-medium">
-              <LucideBuilding2 class="size-3" />
+            <span v-if="email.ticket.customer" class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-900 border border-amber-300 font-bold">
+              <LucideBuilding2 class="size-3 text-amber-600" />
               {{ email.ticket.customer }}
             </span>
-            <span v-if="email.ticket.agent_group" class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-surface-white border border-outline-gray-2 text-ink-gray-8">
-              {{ __("Team") }}: <b class="text-ink-gray-9">{{ email.ticket.agent_group }}</b>
+            <span v-if="email.ticket.agent_group" class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-white border border-slate-300 text-slate-800 font-medium">
+              {{ __("Team") }}: <b class="text-slate-900">{{ email.ticket.agent_group }}</b>
             </span>
           </div>
           <div class="flex items-center gap-2">
             <Button
               variant="outline"
               size="sm"
+              class="rounded-xl !bg-white !border-slate-300 hover:!border-slate-400 text-slate-700 font-semibold shadow-2xs"
               :label="hasUnread ? __('Mark as read') : __('Mark as unread')"
               :loading="seen.loading"
               @click="setSeen(hasUnread ? 1 : 0)"
             >
               <template #prefix>
-                <LucideMailOpen v-if="hasUnread" class="size-3.5 text-primary" />
-                <LucideMail v-else class="size-3.5 text-ink-gray-6" />
+                <LucideMailOpen v-if="hasUnread" class="size-3.5 text-[#d9531e]" />
+                <LucideMail v-else class="size-3.5 text-slate-600" />
               </template>
             </Button>
             <Button
               v-if="email.can_open_ticket"
               variant="subtle"
               size="sm"
+              class="rounded-xl font-semibold"
               :label="__('Open ticket')"
               @click="openTicket"
             >
               <template #prefix>
-                <LucideExternalLink class="size-3.5 text-primary" />
+                <LucideExternalLink class="size-3.5 text-[#d9531e]" />
               </template>
             </Button>
           </div>
@@ -65,48 +67,48 @@
             class="rounded-xl border transition-all"
             :class="
               msg.sent_or_received === 'Received'
-                ? 'border-blue-200 bg-surface-white shadow-xs'
-                : 'border-outline-gray-2 bg-surface-gray-1/50'
+                ? 'border-orange-200/80 bg-white shadow-xs'
+                : 'border-slate-200 bg-slate-50/70'
             "
             :aria-label="__('Email from {0}', [msg.sender_full_name || msg.sender])"
           >
-            <header class="flex flex-wrap items-start justify-between gap-2 border-b border-outline-gray-1 px-3.5 py-2.5 bg-surface-gray-1/30 rounded-t-xl">
+            <header class="flex flex-wrap items-start justify-between gap-2 border-b border-slate-200 px-3.5 py-2.5 bg-slate-50/90 rounded-t-xl">
               <div class="min-w-0">
-                <div class="font-semibold text-ink-gray-9 truncate flex items-center gap-1.5">
-                  <span class="size-2 rounded-full" :class="msg.sent_or_received === 'Received' ? 'bg-primary' : 'bg-emerald-500'" />
+                <div class="font-bold text-slate-900 truncate flex items-center gap-1.5">
+                  <span class="size-2 rounded-full" :class="msg.sent_or_received === 'Received' ? 'bg-[#d9531e]' : 'bg-emerald-500'" />
                   {{ msg.sender_full_name || msg.sender }}
-                  <span class="font-normal text-xs text-ink-gray-5">&lt;{{ msg.sender }}&gt;</span>
+                  <span class="font-normal text-xs text-slate-500">&lt;{{ msg.sender }}&gt;</span>
                 </div>
-                <div v-if="msg.recipients" class="text-xs text-ink-gray-6 truncate mt-0.5">
-                  <span class="font-medium text-ink-gray-7">{{ __("To") }}:</span> {{ msg.recipients }}
+                <div v-if="msg.recipients" class="text-xs text-slate-600 truncate mt-0.5">
+                  <span class="font-medium text-slate-700">{{ __("To") }}:</span> {{ msg.recipients }}
                 </div>
-                <div v-if="msg.cc" class="text-xs text-ink-gray-6 truncate">
-                  <span class="font-medium text-ink-gray-7">{{ __("Cc") }}:</span> {{ msg.cc }}
+                <div v-if="msg.cc" class="text-xs text-slate-600 truncate">
+                  <span class="font-medium text-slate-700">{{ __("Cc") }}:</span> {{ msg.cc }}
                 </div>
               </div>
-              <div class="flex items-center gap-2 text-xs text-ink-gray-6 shrink-0">
+              <div class="flex items-center gap-2 text-xs text-slate-600 shrink-0">
                 <span
-                  class="px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider border"
+                  class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border shadow-2xs"
                   :class="
                     msg.sent_or_received === 'Received'
-                      ? 'bg-blue-50 text-primary border-blue-200'
-                      : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                      ? 'bg-orange-50 text-[#d9531e] border-orange-200'
+                      : 'bg-emerald-100 text-emerald-800 border-emerald-300'
                   "
                 >
                   {{ msg.sent_or_received === "Received" ? __("Received") : __("Sent") }}
                 </span>
-                <time :datetime="msg.communication_date" class="font-medium text-ink-gray-6">{{ dateFormat(msg.communication_date) }}</time>
+                <time :datetime="msg.communication_date" class="font-medium text-slate-600">{{ dateFormat(msg.communication_date) }}</time>
               </div>
             </header>
             <!-- content is sanitized on the server -->
-            <div class="prose prose-sm max-w-none px-4 py-3 text-ink-gray-9 break-words" v-html="msg.content" />
+            <div class="prose prose-sm max-w-none px-4 py-3 text-slate-900 break-words" v-html="msg.content" />
             <AttachmentList v-if="msg.attachments?.length" :files="msg.attachments" class="px-4 pb-3.5" />
           </article>
         </div>
 
-        <div v-if="email.attachments?.length" class="bg-surface-gray-1/50 border border-outline-gray-2 rounded-xl p-3">
-          <div class="mb-2 text-xs font-semibold text-ink-gray-8 flex items-center gap-1.5">
-            <LucidePaperclip class="size-3.5 text-primary" />
+        <div v-if="email.attachments?.length" class="bg-slate-50/90 border border-slate-200 rounded-xl p-3">
+          <div class="mb-2 text-xs font-bold text-slate-800 flex items-center gap-1.5">
+            <LucidePaperclip class="size-3.5 text-[#d9531e]" />
             <span>{{ __("Ticket attachments") }}</span>
           </div>
           <AttachmentList :files="email.attachments" />

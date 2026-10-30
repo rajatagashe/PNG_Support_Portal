@@ -16,9 +16,9 @@ export default {
       colors: {
         primary: {
           DEFAULT: "var(--primary)",
-          hover: "var(--primary-hover, #1d4ed8)",
-          active: "var(--primary-active, #1e40af)",
-          light: "var(--primary-light, #eff6ff)",
+          hover: "var(--primary-hover, #c2410c)",
+          active: "var(--primary-active, #9a3412)",
+          light: "var(--primary-light, #fff7ed)",
           foreground: "var(--primary-foreground, #ffffff)",
         },
         secondary: {

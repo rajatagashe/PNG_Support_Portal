@@ -1,23 +1,23 @@
 <template>
   <div
-    class="bg-surface-white border border-outline-gray-2 rounded-xl p-4 shadow-xs space-y-3"
+    class="bg-white border border-gray-200/90 rounded-2xl p-4 shadow-xs space-y-3"
     role="status"
     aria-live="polite"
   >
     <div class="flex items-center justify-between">
       <div class="flex items-center gap-2">
-        <div class="flex size-8 items-center justify-center rounded-lg bg-blue-50 border border-blue-200 text-blue-600">
+        <div class="flex size-8 items-center justify-center rounded-lg bg-orange-50 border border-orange-200 text-[#d9531e]">
           <LucidePlugZap class="size-4" />
         </div>
         <div>
-          <span class="text-sm font-semibold text-ink-gray-9">
+          <span class="text-sm font-bold text-gray-900">
             {{ __("Support Mailbox Connection") }}
           </span>
-          <span class="text-xs text-ink-gray-5 block">
+          <span class="text-xs text-gray-500 font-medium block">
             {{ __("Microsoft 365 OAuth Inbound Sync") }}
           </span>
         </div>
-        <LoadingIndicator v-if="status.loading" class="size-3.5 text-ink-gray-5 ml-1" />
+        <LoadingIndicator v-if="status.loading" class="size-3.5 text-gray-400 ml-1" />
       </div>
     </div>
 
@@ -32,7 +32,7 @@
     <div
       v-for="acc in accounts"
       :key="acc.account"
-      class="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-outline-gray-2 bg-surface-gray-1/60 p-3.5 transition-all hover:bg-surface-gray-1"
+      class="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50/90 p-3.5 transition-all hover:bg-slate-100/90"
     >
       <div class="flex items-center gap-3 min-w-0">
         <!-- Live status pulse indicator -->
@@ -54,36 +54,36 @@
 
         <div class="min-w-0">
           <div class="flex items-center gap-2 flex-wrap">
-            <span class="text-sm font-semibold text-ink-gray-9 truncate">
+            <span class="text-sm font-bold text-slate-900 truncate">
               {{ acc.email_id }}
             </span>
             <span
-              class="px-2 py-0.5 rounded-full text-[10px] font-semibold tracking-wide border inline-flex items-center gap-1"
+              class="px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wide border inline-flex items-center gap-1 shadow-2xs"
               :class="{
-                'bg-emerald-50 text-emerald-700 border-emerald-200': acc.state === 'connected',
-                'bg-rose-50 text-rose-700 border-rose-200': acc.state === 'error',
-                'bg-slate-100 text-slate-700 border-slate-200': acc.state === 'disabled',
-                'bg-amber-50 text-amber-700 border-amber-200': acc.state === 'not_synced'
+                'bg-emerald-100 text-emerald-800 border-emerald-300': acc.state === 'connected',
+                'bg-rose-100 text-rose-800 border-rose-300': acc.state === 'error',
+                'bg-slate-200 text-slate-800 border-slate-300': acc.state === 'disabled',
+                'bg-amber-100 text-amber-800 border-amber-300': acc.state === 'not_synced'
               }"
             >
               <span
                 class="size-1.5 rounded-full"
                 :class="{
-                  'bg-emerald-500': acc.state === 'connected',
-                  'bg-rose-500': acc.state === 'error',
-                  'bg-slate-500': acc.state === 'disabled',
-                  'bg-amber-500': acc.state === 'not_synced'
+                  'bg-emerald-600': acc.state === 'connected',
+                  'bg-rose-600': acc.state === 'error',
+                  'bg-slate-600': acc.state === 'disabled',
+                  'bg-amber-600': acc.state === 'not_synced'
                 }"
               />
               {{ stateLabel(acc.state) }}
             </span>
           </div>
-          <div class="text-xs text-ink-gray-6 mt-0.5 flex items-center gap-3 flex-wrap">
-            <span v-if="acc.message" class="text-rose-600 font-medium">{{ acc.message }}</span>
-            <span v-else-if="acc.last_success_at" class="flex items-center gap-1">
+          <div class="text-xs text-slate-600 mt-0.5 flex items-center gap-3 flex-wrap">
+            <span v-if="acc.message" class="text-rose-700 font-bold">{{ acc.message }}</span>
+            <span v-else-if="acc.last_success_at" class="flex items-center gap-1 font-medium">
               {{ __("Last checked {0}", [timeAgo(acc.last_success_at)]) }}
             </span>
-            <span v-if="acc.last_email_at" class="text-ink-gray-5">
+            <span v-if="acc.last_email_at" class="text-slate-500 font-medium">
               &bull; {{ __("Latest email {0}", [timeAgo(acc.last_email_at)]) }}
             </span>
           </div>

@@ -194,13 +194,32 @@ const options = computed(() => ({
         const status = getStatus(item);
         const label = isCustomerPortal.value
           ? status?.["label_customer"]
-          : status?.["label_agent"];
+          : status?.["label_agent"] || item;
+
+        let badgeClass = "bg-slate-200 text-slate-800 border-slate-300 font-bold";
+        let dotClass = "bg-slate-600";
+        if (item === "Resolved") {
+          badgeClass = "bg-emerald-100 text-emerald-800 border-emerald-300 font-bold";
+          dotClass = "bg-emerald-600";
+        } else if (item === "Open") {
+          badgeClass = "bg-sky-100 text-sky-800 border-sky-300 font-bold";
+          dotClass = "bg-sky-600";
+        } else if (item === "Pending") {
+          badgeClass = "bg-amber-100 text-amber-900 border-amber-300 font-bold";
+          dotClass = "bg-amber-600";
+        } else if (item === "Closed") {
+          badgeClass = "bg-slate-200 text-slate-800 border-slate-300 font-bold";
+          dotClass = "bg-slate-600";
+        }
+
         return h(
-          "div",
-          { class: "flex items-center gap-1.5 justify-start w-full" },
+          "span",
+          {
+            class: `inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${badgeClass} shadow-2xs`,
+          },
           [
-            h(IndicatorIcon, { class: status?.["parsed_color"] }),
-            h("span", { class: "truncate flex-1 text-base" }, label),
+            h("span", { class: `size-1.5 rounded-full ${dotClass}` }),
+            h("span", { class: "truncate" }, label),
           ]
         );
       },
@@ -267,31 +286,41 @@ function handleResponseByField(row: any, item: string) {
     {
       text: dayjsLocal(item).format("LLLL"),
     },
-    h(Badge, {
-      label: shortDuration(item),
-      variant: "subtle",
-      theme: "amber",
-    })
+    h(
+      "span",
+      {
+        class:
+          "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-amber-50 text-amber-800 border border-amber-300 shadow-2xs",
+      },
+      shortDuration(item)
+    )
   );
 }
 
 function slaOutcomeBadge(fulfilled: boolean) {
-  return h(Badge, {
-    label: fulfilled ? __("Fulfilled") : __("Failed"),
-    theme: fulfilled ? "gray" : "red",
-    variant: "subtle",
-  });
+  return h(
+    "span",
+    {
+      class: fulfilled
+        ? "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-300 shadow-2xs"
+        : "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-rose-50 text-rose-700 border border-rose-300 shadow-2xs",
+    },
+    fulfilled ? __("Fulfilled") : __("Failed")
+  );
 }
 
 function handleResolutionByField(row: any, item: string) {
   if (!row.sla) return null;
   const status = getStatus(row.status) || {};
   if (status.category === "Paused") {
-    return h(Badge, {
-      label: __("Paused"),
-      theme: "blue",
-      variant: "subtle",
-    });
+    return h(
+      "span",
+      {
+        class:
+          "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-sky-50 text-sky-700 border border-sky-300 shadow-2xs",
+      },
+      __("Paused")
+    );
   }
   if (row.resolution_date) {
     const fulfilled =
@@ -307,11 +336,14 @@ function handleResolutionByField(row: any, item: string) {
     {
       text: dayjsLocal(item).format("LLLL"),
     },
-    h(Badge, {
-      label: shortDuration(item),
-      variant: "subtle",
-      theme: "violet",
-    })
+    h(
+      "span",
+      {
+        class:
+          "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-purple-50 text-purple-700 border border-purple-200 shadow-2xs",
+      },
+      shortDuration(item)
+    )
   );
 }
 

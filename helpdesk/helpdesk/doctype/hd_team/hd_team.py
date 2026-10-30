@@ -117,5 +117,7 @@ class HDTeam(Document):
 
 @frappe.whitelist()
 @agent_only
-def get_team_members(team: str):
+def get_team_members(team: str | None = None):
+    if not team:
+        return []
     return frappe.get_all("HD Team Member", filters={"parent": team}, pluck="user")

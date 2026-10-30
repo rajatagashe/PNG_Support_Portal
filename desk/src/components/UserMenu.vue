@@ -27,8 +27,8 @@
             <span class="truncate">{{ authStore.userName }}</span>
             <span
               v-if="!isCustomerPortal"
-              class="px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider"
-              :class="authStore.isAdmin ? 'bg-surface-gray-3 text-ink-gray-9 border border-outline-gray-3' : 'bg-surface-gray-2 text-ink-gray-7 border border-outline-gray-2'"
+              class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider"
+              :class="authStore.isAdmin ? 'bg-orange-100 text-[#d9531e] border border-orange-300' : 'bg-emerald-100 text-emerald-800 border border-emerald-300'"
             >
               {{ authStore.isAdmin ? __('Admin') : __('User') }}
             </span>

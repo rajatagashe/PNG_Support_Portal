@@ -6,9 +6,9 @@
   >
     <!-- the row carries the underline so it runs beneath the actions too -->
     <div
-      class="flex shrink-0 items-center gap-2 border-b border-outline-gray-1 px-5"
+      class="flex shrink-0 items-center gap-2 border-b border-slate-200 bg-slate-50/70 px-5 py-1"
     >
-      <TabList size="md" class="flex-1 !border-b-0 py-1.5">
+      <TabList size="md" class="flex-1 !border-b-0 py-1">
         <TabTrigger
           v-for="tab in tabs"
           :key="tab.value"

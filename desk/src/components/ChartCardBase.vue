@@ -4,7 +4,7 @@
     :class="[orientation == 'horizontal' && 'pt-3']"
   >
     <slot name="title">
-      <div class="text-ink-gray-5 text-base mb-2">
+      <div class="text-slate-700 font-semibold text-sm mb-2 tracking-wide">
         {{ title }}
       </div>
     </slot>
@@ -15,7 +15,7 @@
       <div class="flex items-end w-full gap-2">
         <slot name="text">
           <div
-            class="text-2xl-medium text-center text-ink-gray-8 whitespace-nowrap"
+            class="text-2xl sm:text-3xl font-extrabold text-[#1b2a5b] tracking-tight whitespace-nowrap"
           >
             {{ text }}
           </div>
@@ -27,17 +27,17 @@
               :class="percentageChange.icon"
               class="size-4"
             />
-            <div>{{ percentageChange.value }}%</div>
+            <div class="font-bold text-xs">{{ percentageChange.value }}%</div>
           </div>
           <Dropdown :options="durationOptions">
             <div
-              class="flex items-center gap-0.5 text-ink-gray-5 hover:text-ink-gray-6 cursor-pointer shrink-0"
+              class="flex items-center gap-0.5 text-slate-500 hover:text-slate-800 font-medium text-xs cursor-pointer shrink-0"
             >
               <div class="flex gap-1">
                 <span>vs</span>
                 <span>{{ __(currentDuration).toLowerCase() }}</span>
               </div>
-              <LucideChevronDown class="size-4" />
+              <LucideChevronDown class="size-3.5" />
             </div>
             <template #item-label="{ item }">
               <div
